@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0e1a"/>
+      <stop offset="100%" style="stop-color:#0d1225"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#06b6d4"/>
+      <stop offset="100%" style="stop-color:#22d3ee"/>
+    </linearGradient>
+    <filter id="neon">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="outerGlow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="250" fill="url(#bg)" stroke="#06b6d4" stroke-width="3" stroke-opacity="0.3"/>
+  
+  <!-- Outer hexagon ring -->
+  <polygon points="256,46 430,146 430,346 256,446 82,346 82,146" 
+    fill="none" stroke="#06b6d4" stroke-width="4" stroke-opacity="0.5" filter="url(#neon)"/>
+  
+  <!-- Inner hexagon -->
+  <polygon points="256,86 400,166 400,326 256,406 112,326 112,166" 
+    fill="#06b6d4" fill-opacity="0.08" stroke="#06b6d4" stroke-width="2" stroke-opacity="0.7"/>
+  
+  <!-- Circuit lines - horizontal -->
+  <line x1="140" y1="200" x2="200" y2="200" stroke="#06b6d4" stroke-width="2" stroke-opacity="0.4"/>
+  <line x1="312" y1="200" x2="372" y2="200" stroke="#06b6d4" stroke-width="2" stroke-opacity="0.4"/>
+  <line x1="140" y1="312" x2="200" y2="312" stroke="#06b6d4" stroke-width="2" stroke-opacity="0.4"/>
+  <line x1="312" y1="312" x2="372" y2="312" stroke="#06b6d4" stroke-width="2" stroke-opacity="0.4"/>
+  
+  <!-- Circuit dots -->
+  <circle cx="140" cy="200" r="4" fill="#06b6d4" fill-opacity="0.6"/>
+  <circle cx="372" cy="200" r="4" fill="#06b6d4" fill-opacity="0.6"/>
+  <circle cx="140" cy="312" r="4" fill="#06b6d4" fill-opacity="0.6"/>
+  <circle cx="372" cy="312" r="4" fill="#06b6d4" fill-opacity="0.6"/>
+  
+  <!-- Central eye / brain icon -->
+  <g filter="url(#outerGlow)">
+    <!-- Outer ring of the eye -->
+    <ellipse cx="256" cy="256" rx="80" ry="55" fill="none" stroke="#06b6d4" stroke-width="3"/>
+    <!-- Inner circle (iris) -->
+    <circle cx="256" cy="256" r="30" fill="#06b6d4" fill-opacity="0.2" stroke="#22d3ee" stroke-width="2.5"/>
+    <!-- Pupil -->
+    <circle cx="256" cy="256" r="14" fill="#06b6d4" fill-opacity="0.6"/>
+    <!-- Highlight -->
+    <circle cx="248" cy="248" r="5" fill="#ffffff" fill-opacity="0.7"/>
+  </g>
+  
+  <!-- Scan lines emanating from eye -->
+  <line x1="176" y1="230" x2="140" y2="200" stroke="#06b6d4" stroke-width="1.5" stroke-opacity="0.3"/>
+  <line x1="336" y1="230" x2="372" y2="200" stroke="#06b6d4" stroke-width="1.5" stroke-opacity="0.3"/>
+  <line x1="176" y1="282" x2="140" y2="312" stroke="#06b6d4" stroke-width="1.5" stroke-opacity="0.3"/>
+  <line x1="336" y1="282" x2="372" y2="312" stroke="#06b6d4" stroke-width="1.5" stroke-opacity="0.3"/>
+  
+  <!-- Top accent arc -->
+  <path d="M 200 120 Q 256 95 312 120" fill="none" stroke="#22d3ee" stroke-width="2" stroke-opacity="0.5"/>
+  <!-- Bottom accent arc -->
+  <path d="M 200 392 Q 256 417 312 392" fill="none" stroke="#22d3ee" stroke-width="2" stroke-opacity="0.5"/>
+</svg>

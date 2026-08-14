@@ -1,0 +1,140 @@
+{
+  "sources": [
+    {
+      "name": "City of Kingman - Official Website",
+      "url": "https://www.cityofkingman.gov",
+      "type": "webpage",
+      "city": "Kingman",
+      "category": "government",
+      "sourceLabel": "City of Kingman",
+      "intervalMinutes": 360,
+      "enabled": true
+    },
+    {
+      "name": "Kingman Daily Miner - Local News",
+      "url": "https://www.kdminer.com/search/?f=rss&t=article&l=50&s=start_time&sd=desc",
+      "type": "rss",
+      "city": "Kingman",
+      "category": "local_news",
+      "sourceLabel": "Kingman Daily Miner",
+      "intervalMinutes": 180,
+      "enabled": true
+    },
+    {
+      "name": "City of Bullhead City - Official Website",
+      "url": "https://www.bullheadcity.com",
+      "type": "webpage",
+      "city": "Bullhead City",
+      "category": "government",
+      "sourceLabel": "City of Bullhead City",
+      "intervalMinutes": 360,
+      "enabled": true
+    },
+    {
+      "name": "Mohave Valley Daily News",
+      "url": "https://www.mohavedailynews.com/search/?f=rss&t=article&l=50&s=start_time&sd=desc",
+      "type": "rss",
+      "city": "Bullhead City",
+      "category": "local_news",
+      "sourceLabel": "Mohave Daily News",
+      "intervalMinutes": 180,
+      "enabled": true
+    },
+    {
+      "name": "City of Lake Havasu - Official Website",
+      "url": "https://www.lhcaz.gov",
+      "type": "webpage",
+      "city": "Lake Havasu City",
+      "category": "government",
+      "sourceLabel": "City of Lake Havasu",
+      "intervalMinutes": 360,
+      "enabled": true
+    },
+    {
+      "name": "Havasu News-Herald",
+      "url": "https://www.havasunews.com/search/?f=rss",
+      "type": "rss",
+      "city": "Lake Havasu City",
+      "category": "local_news",
+      "sourceLabel": "Havasu News-Herald",
+      "intervalMinutes": 180,
+      "enabled": true
+    },
+    {
+      "name": "Mohave County Government",
+      "url": "https://www.mohavecounty.us",
+      "type": "webpage",
+      "city": "Mohave County",
+      "category": "county_news",
+      "sourceLabel": "Mohave County Government",
+      "intervalMinutes": 360,
+      "enabled": true
+    },
+    {
+      "name": "Mohave County Board of Supervisors",
+      "url": "https://www.mohavecounty.us/ContentPage.aspx?id=127",
+      "type": "webpage",
+      "city": "Mohave County",
+      "category": "county_board",
+      "sourceLabel": "Mohave County Government",
+      "intervalMinutes": 720,
+      "enabled": true
+    },
+    {
+      "name": "Arizona Daily Sun (regional)",
+      "url": "https://azdailysun.com/search/?f=rss&t=article&l=25&s=start_time&sd=desc",
+      "type": "rss",
+      "city": "Mohave County",
+      "category": "regional_news",
+      "sourceLabel": "Arizona Daily Sun",
+      "intervalMinutes": 360,
+      "enabled": true
+    },
+    {
+      "name": "Arizona Center for Investigative Reporting",
+      "url": "https://azcir.org/feed/",
+      "type": "rss",
+      "city": "Mohave County",
+      "category": "investigative",
+      "sourceLabel": "AZCIR",
+      "intervalMinutes": 720,
+      "enabled": true
+    },
+    {
+      "name": "12News Arizona — Local",
+      "url": "https://www.12news.com/feeds/syndication/rss/news/local",
+      "type": "rss",
+      "city": "Mohave County",
+      "category": "regional_news",
+      "sourceLabel": "12News Arizona",
+      "intervalMinutes": 360,
+      "enabled": true
+    },
+    {
+      "name": "The Bee News (Bullhead City)",
+      "url": "https://www.thebee.news/feed/",
+      "type": "rss",
+      "city": "Bullhead City",
+      "category": "local_news",
+      "sourceLabel": "The Bee News",
+      "intervalMinutes": 360,
+      "enabled": true
+    },
+    {
+      "name": "NWS Flagstaff — Mohave County weather alerts",
+      "url": "https://alerts.weather.gov/cap/wwaatmget.php?x=AZZ030&y=0",
+      "type": "rss",
+      "city": "Mohave County",
+      "category": "weather",
+      "sourceLabel": "National Weather Service",
+      "intervalMinutes": 180,
+      "enabled": true
+    }
+  ],
+  "metadata": {
+    "version": "1.1",
+    "description": "Default Mohave County data sources for The Cacti civic intelligence platform",
+    "lastUpdated": "2026-05-08",
+    "notes": "Canonical source list. The seedSources mutation inserts any URL from this file not already in the ingestion_sources table — safe to re-run after edits."
+  }
+}

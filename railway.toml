@@ -1,0 +1,22 @@
+# Railway configuration for The Cacti.
+#
+# Railway auto-detects Node/pnpm from package.json + lockfile, so most of
+# this is explicit overrides of defaults Railway might guess wrong, plus
+# the healthcheck wiring the platform needs.
+
+[build]
+builder = "NIXPACKS"
+buildCommand = "pnpm install --frozen-lockfile && pnpm build"
+
+[deploy]
+startCommand = "pnpm start"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+
+# Persistent volume — SQLite lives here so it survives redeploys.
+# Mount path matches DATABASE_PATH env var (set on Railway dashboard).
+[[deploy.volumes]]
+name = "cacti-data"
+mountPath = "/app/data"

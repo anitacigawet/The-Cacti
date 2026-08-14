@@ -1,0 +1,854 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  /* Cacti custom colors */
+  --color-cacti-cyan: oklch(0.78 0.15 195);
+  --color-cacti-green: oklch(0.72 0.18 155);
+  --color-cacti-amber: oklch(0.78 0.16 75);
+  --color-cacti-red: oklch(0.65 0.22 25);
+  --color-cacti-purple: oklch(0.65 0.18 300);
+  --color-cacti-surface: oklch(0.16 0.01 260);
+  --color-cacti-surface-light: oklch(0.20 0.012 260);
+  --color-cacti-glow: oklch(0.78 0.15 195 / 30%);
+  /* Font families — see FontToggle.tsx for user-flippable presets.
+     Default is Atkinson Hyperlegible (D3 ship 2026-05-30); the "A" toggle
+     swaps display→Playfair + body→Inter for the editorial preset. */
+  --font-display: 'Atkinson Hyperlegible', sans-serif;
+  --font-body: 'Atkinson Hyperlegible', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+:root {
+  --radius: 0.5rem;
+  /* Dark theme as default for Cacti */
+  --background: oklch(0.12 0.01 260);
+  --foreground: oklch(0.92 0.01 195);
+  --card: oklch(0.16 0.012 260);
+  --card-foreground: oklch(0.92 0.01 195);
+  --popover: oklch(0.18 0.012 260);
+  --popover-foreground: oklch(0.92 0.01 195);
+  --primary: oklch(0.78 0.15 195);
+  --primary-foreground: oklch(0.12 0.01 260);
+  --secondary: oklch(0.20 0.012 260);
+  --secondary-foreground: oklch(0.78 0.08 195);
+  --muted: oklch(0.22 0.01 260);
+  --muted-foreground: oklch(0.68 0.04 195);
+  --accent: oklch(0.20 0.02 195);
+  --accent-foreground: oklch(0.85 0.10 195);
+  --destructive: oklch(0.65 0.22 25);
+  --destructive-foreground: oklch(0.95 0 0);
+  --border: oklch(0.28 0.02 195 / 40%);
+  --input: oklch(0.28 0.02 195 / 40%);
+  --ring: oklch(0.78 0.15 195);
+  --chart-1: oklch(0.78 0.15 195);
+  --chart-2: oklch(0.72 0.18 155);
+  --chart-3: oklch(0.78 0.16 75);
+  --chart-4: oklch(0.65 0.18 300);
+  --chart-5: oklch(0.65 0.22 25);
+  --sidebar: oklch(0.14 0.012 260);
+  --sidebar-foreground: oklch(0.85 0.04 195);
+  --sidebar-primary: oklch(0.78 0.15 195);
+  --sidebar-primary-foreground: oklch(0.12 0.01 260);
+  --sidebar-accent: oklch(0.20 0.02 195);
+  --sidebar-accent-foreground: oklch(0.85 0.10 195);
+  --sidebar-border: oklch(0.28 0.02 195 / 30%);
+  --sidebar-ring: oklch(0.78 0.15 195);
+}
+
+.dark {
+  --background: oklch(0.12 0.01 260);
+  --foreground: oklch(0.92 0.01 195);
+  --card: oklch(0.16 0.012 260);
+  --card-foreground: oklch(0.92 0.01 195);
+  --popover: oklch(0.18 0.012 260);
+  --popover-foreground: oklch(0.92 0.01 195);
+  --primary: oklch(0.78 0.15 195);
+  --primary-foreground: oklch(0.12 0.01 260);
+  --secondary: oklch(0.20 0.012 260);
+  --secondary-foreground: oklch(0.78 0.08 195);
+  --muted: oklch(0.22 0.01 260);
+  --muted-foreground: oklch(0.68 0.04 195);
+  --accent: oklch(0.20 0.02 195);
+  --accent-foreground: oklch(0.85 0.10 195);
+  --destructive: oklch(0.65 0.22 25);
+  --destructive-foreground: oklch(0.95 0 0);
+  --border: oklch(0.28 0.02 195 / 40%);
+  --input: oklch(0.28 0.02 195 / 40%);
+  --ring: oklch(0.78 0.15 195);
+  --chart-1: oklch(0.78 0.15 195);
+  --chart-2: oklch(0.72 0.18 155);
+  --chart-3: oklch(0.78 0.16 75);
+  --chart-4: oklch(0.65 0.18 300);
+  --chart-5: oklch(0.65 0.22 25);
+  --sidebar: oklch(0.14 0.012 260);
+  --sidebar-foreground: oklch(0.85 0.04 195);
+  --sidebar-primary: oklch(0.78 0.15 195);
+  --sidebar-primary-foreground: oklch(0.12 0.01 260);
+  --sidebar-accent: oklch(0.20 0.02 195);
+  --sidebar-accent-foreground: oklch(0.85 0.10 195);
+  --sidebar-border: oklch(0.28 0.02 195 / 30%);
+  --sidebar-ring: oklch(0.78 0.15 195);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [type="button"]:not(:disabled),
+  [type="submit"]:not(:disabled),
+  [type="reset"]:not(:disabled),
+  a[href],
+  select:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled) {
+    @apply cursor-pointer;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+  code, pre, .font-mono {
+    font-family: var(--font-mono);
+  }
+}
+
+@layer components {
+  .container {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .flex {
+    min-height: 0;
+    min-width: 0;
+  }
+
+  @media (min-width: 640px) {
+    .container {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container {
+      padding-left: 2rem;
+      padding-right: 2rem;
+      max-width: 1600px;
+    }
+  }
+
+  /* Cacti Glow Effects */
+  .cacti-glow {
+    box-shadow: 0 0 15px oklch(0.78 0.15 195 / 20%), 0 0 30px oklch(0.78 0.15 195 / 10%), inset 0 1px 0 oklch(0.78 0.15 195 / 15%);
+  }
+
+  .cacti-glow-green {
+    box-shadow: 0 0 15px oklch(0.72 0.18 155 / 20%), 0 0 30px oklch(0.72 0.18 155 / 10%), inset 0 1px 0 oklch(0.72 0.18 155 / 15%);
+  }
+
+  .cacti-glow-amber {
+    box-shadow: 0 0 15px oklch(0.78 0.16 75 / 20%), 0 0 30px oklch(0.78 0.16 75 / 10%), inset 0 1px 0 oklch(0.78 0.16 75 / 15%);
+  }
+
+  .cacti-glow-red {
+    box-shadow: 0 0 15px oklch(0.65 0.22 25 / 20%), 0 0 30px oklch(0.65 0.22 25 / 10%), inset 0 1px 0 oklch(0.65 0.22 25 / 15%);
+  }
+
+  /* Cacti Card */
+  .cacti-card {
+    background: oklch(0.16 0.012 260);
+    border: 1px solid oklch(0.28 0.02 195 / 40%);
+    border-radius: 0.5rem;
+    backdrop-filter: blur(12px);
+    transition: all 0.3s ease;
+  }
+
+  .cacti-card:hover {
+    border-color: oklch(0.78 0.15 195 / 50%);
+    box-shadow: 0 0 20px oklch(0.78 0.15 195 / 15%);
+  }
+
+  /* Hide horizontal scrollbar on tab strips. Visible Windows scrollbars on
+     overflow-x-auto rows are clunky — the swipe affordance is implicit. */
+  .cacti-scroll-x {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .cacti-scroll-x::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Cacti Report — typographic hierarchy for AI-generated briefs */
+  .cacti-report {
+    color: oklch(0.92 0.01 195);
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    max-width: 72ch;
+  }
+
+  .cacti-report > * + * {
+    margin-top: 0.85rem;
+  }
+
+  .cacti-report h1,
+  .cacti-report h2 {
+    font-family: var(--font-display);
+    color: oklch(0.78 0.15 195);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 1.05rem;
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid oklch(0.78 0.15 195 / 25%);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .cacti-report h1::before,
+  .cacti-report h2::before {
+    content: "◆";
+    color: oklch(0.78 0.15 195 / 70%);
+    font-size: 0.7rem;
+  }
+
+  .cacti-report h1:first-child,
+  .cacti-report h2:first-child {
+    margin-top: 0;
+  }
+
+  .cacti-report h3 {
+    font-family: var(--font-display);
+    color: oklch(0.85 0.04 195);
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 1.4rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .cacti-report p {
+    color: oklch(0.85 0.01 195 / 90%);
+  }
+
+  .cacti-report strong {
+    color: oklch(0.96 0.005 195);
+    font-weight: 600;
+    background: oklch(0.78 0.15 195 / 8%);
+    padding: 0.05rem 0.35rem;
+    border-radius: 0.25rem;
+    border-left: 2px solid oklch(0.78 0.15 195 / 60%);
+    margin-right: 0.15rem;
+  }
+
+  .cacti-report em {
+    color: oklch(0.78 0.16 75);
+    font-style: italic;
+  }
+
+  .cacti-report ul,
+  .cacti-report ol {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding-left: 0;
+    list-style: none;
+  }
+
+  .cacti-report ul > li,
+  .cacti-report ol > li {
+    position: relative;
+    padding-left: 1.5rem;
+    margin-top: 0.55rem;
+    color: oklch(0.85 0.01 195 / 90%);
+  }
+
+  .cacti-report ul > li::before {
+    content: "";
+    position: absolute;
+    left: 0.4rem;
+    top: 0.7em;
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: 999px;
+    background: oklch(0.78 0.15 195 / 70%);
+    box-shadow: 0 0 6px oklch(0.78 0.15 195 / 40%);
+  }
+
+  .cacti-report ol {
+    counter-reset: cacti-step;
+  }
+
+  .cacti-report ol > li {
+    counter-increment: cacti-step;
+  }
+
+  .cacti-report ol > li::before {
+    content: counter(cacti-step);
+    position: absolute;
+    left: 0;
+    top: 0.05em;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: oklch(0.78 0.15 195);
+    background: oklch(0.78 0.15 195 / 10%);
+    border: 1px solid oklch(0.78 0.15 195 / 30%);
+    border-radius: 0.25rem;
+    padding: 0.05rem 0.3rem;
+    line-height: 1.2;
+  }
+
+  .cacti-report hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, oklch(0.78 0.15 195 / 30%), transparent);
+    margin: 1.75rem 0;
+  }
+
+  .cacti-report blockquote {
+    margin: 1rem 0;
+    padding: 0.6rem 0.9rem;
+    border-left: 3px solid oklch(0.78 0.15 195 / 60%);
+    background: oklch(0.78 0.15 195 / 5%);
+    color: oklch(0.85 0.01 195);
+    font-style: italic;
+    border-radius: 0 0.25rem 0.25rem 0;
+  }
+
+  .cacti-report code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    background: oklch(0.2 0.012 260);
+    color: oklch(0.85 0.08 155);
+    padding: 0.1rem 0.3rem;
+    border-radius: 0.25rem;
+  }
+
+  /* Scan line effect */
+  .cacti-scanlines::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      oklch(0.78 0.15 195 / 3%) 2px,
+      oklch(0.78 0.15 195 / 3%) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Hex grid background pattern */
+  .cacti-hex-bg {
+    background-image:
+      radial-gradient(circle at 25% 25%, oklch(0.78 0.15 195 / 5%) 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, oklch(0.72 0.18 155 / 5%) 0%, transparent 50%);
+  }
+
+  /* Status indicator pulse */
+  .cacti-pulse {
+    animation: cacti-pulse 2s ease-in-out infinite;
+  }
+
+  .cacti-pulse-fast {
+    animation: cacti-pulse 1s ease-in-out infinite;
+  }
+
+  /* Text glow */
+  .cacti-text-glow {
+    text-shadow: 0 0 10px oklch(0.78 0.15 195 / 50%), 0 0 20px oklch(0.78 0.15 195 / 25%);
+  }
+
+  .cacti-text-glow-green {
+    text-shadow: 0 0 10px oklch(0.72 0.18 155 / 50%), 0 0 20px oklch(0.72 0.18 155 / 25%);
+  }
+
+  /* Custom scrollbar */
+  .cacti-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .cacti-scrollbar::-webkit-scrollbar-track {
+    background: oklch(0.14 0.01 260);
+  }
+
+  .cacti-scrollbar::-webkit-scrollbar-thumb {
+    background: oklch(0.78 0.15 195 / 40%);
+    border-radius: 3px;
+  }
+
+  .cacti-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.78 0.15 195 / 60%);
+  }
+
+  /* Data stream animation */
+  .cacti-data-stream {
+    animation: data-stream 20s linear infinite;
+  }
+}
+
+@keyframes cacti-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes data-stream {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes cacti-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cacti-slide-in {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes cacti-glow-pulse {
+  0%, 100% { box-shadow: 0 0 15px oklch(0.78 0.15 195 / 20%); }
+  50% { box-shadow: 0 0 25px oklch(0.78 0.15 195 / 40%); }
+}
+
+@keyframes cacti-float-1 {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(30px, -20px); }
+  66% { transform: translate(-20px, 15px); }
+}
+
+@keyframes cacti-float-2 {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(-25px, 20px); }
+  66% { transform: translate(15px, -30px); }
+}
+
+@keyframes cacti-float-3 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(20px, 25px); }
+}
+
+@keyframes cacti-scanline {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(4px); }
+}
+
+.animate-cacti-fade-in {
+  animation: cacti-fade-in 0.4s ease-out forwards;
+}
+
+.animate-cacti-slide-in {
+  animation: cacti-slide-in 0.3s ease-out forwards;
+}
+
+.animate-cacti-glow-pulse {
+  animation: cacti-glow-pulse 3s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   THE CACTI NEWSPAPER STYLES
+   Desert-inspired color palette with Cacti intelligence aesthetic
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Newspaper column layout */
+.newspaper-columns {
+  column-count: 2;
+  column-gap: 2rem;
+  column-rule: 1px solid oklch(0.35 0.04 50 / 30%);
+}
+
+@media (max-width: 768px) {
+  .newspaper-columns {
+    column-count: 1;
+  }
+}
+
+/* Drop cap for lead stories */
+.newspaper-columns p:first-of-type::first-letter {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 3.5rem;
+  font-weight: 700;
+  float: left;
+  line-height: 0.8;
+  margin-right: 0.5rem;
+  margin-top: 0.1rem;
+  color: oklch(0.78 0.15 195);
+}
+
+/* Newspaper page wrapper */
+.cacti-newspaper {
+  background: linear-gradient(180deg, oklch(0.14 0.01 260) 0%, oklch(0.12 0.015 250) 100%);
+  position: relative;
+}
+
+/* Decorative desert-toned ornamental rules */
+.cacti-ornament {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+.cacti-ornament::before,
+.cacti-ornament::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, oklch(0.55 0.10 50 / 40%), transparent);
+}
+
+/* Breaking news banner */
+.cacti-breaking-banner {
+  background: linear-gradient(135deg, oklch(0.25 0.12 25), oklch(0.20 0.08 15));
+  border: 1px solid oklch(0.65 0.22 25 / 50%);
+  border-left: 4px solid oklch(0.65 0.22 25);
+  position: relative;
+  overflow: hidden;
+}
+.cacti-breaking-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, oklch(0.65 0.22 25), oklch(0.78 0.16 75), oklch(0.65 0.22 25));
+  animation: cacti-alert-pulse 2s ease-in-out infinite;
+}
+
+@keyframes cacti-alert-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* Masthead styling */
+.cacti-masthead {
+  background: linear-gradient(180deg, oklch(0.18 0.02 260) 0%, oklch(0.14 0.01 260) 100%);
+  border-top: 3px solid oklch(0.55 0.10 50 / 60%);
+  border-bottom: 3px solid oklch(0.55 0.10 50 / 60%);
+  position: relative;
+}
+.cacti-masthead::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, oklch(0.78 0.15 195 / 30%), transparent);
+}
+
+/* Category color badges */
+.cacti-cat-government { color: oklch(0.72 0.12 250); background: oklch(0.72 0.12 250 / 12%); border-color: oklch(0.72 0.12 250 / 30%); }
+.cacti-cat-public_safety { color: oklch(0.65 0.22 25); background: oklch(0.65 0.22 25 / 12%); border-color: oklch(0.65 0.22 25 / 30%); }
+.cacti-cat-infrastructure { color: oklch(0.70 0.14 200); background: oklch(0.70 0.14 200 / 12%); border-color: oklch(0.70 0.14 200 / 30%); }
+.cacti-cat-environment { color: oklch(0.72 0.18 155); background: oklch(0.72 0.18 155 / 12%); border-color: oklch(0.72 0.18 155 / 30%); }
+.cacti-cat-education { color: oklch(0.70 0.15 280); background: oklch(0.70 0.15 280 / 12%); border-color: oklch(0.70 0.15 280 / 30%); }
+.cacti-cat-economy { color: oklch(0.78 0.16 75); background: oklch(0.78 0.16 75 / 12%); border-color: oklch(0.78 0.16 75 / 30%); }
+.cacti-cat-community { color: oklch(0.75 0.12 170); background: oklch(0.75 0.12 170 / 12%); border-color: oklch(0.75 0.12 170 / 30%); }
+.cacti-cat-health { color: oklch(0.70 0.18 340); background: oklch(0.70 0.18 340 / 12%); border-color: oklch(0.70 0.18 340 / 30%); }
+
+/* Lead story accent border */
+.cacti-lead-story {
+  border-left: 4px solid oklch(0.78 0.15 195);
+  padding-left: 1.5rem;
+  position: relative;
+}
+.cacti-lead-story::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -4px;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, oklch(0.78 0.15 195), oklch(0.72 0.18 155));
+}
+
+/* Column story dividers with desert accent */
+.cacti-column-divider {
+  border-bottom: 1px solid oklch(0.55 0.10 50 / 20%);
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+.cacti-column-divider:last-child {
+  border-bottom: none;
+}
+
+/* Section headers with decorative lines */
+.cacti-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.cacti-section-header::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(90deg, oklch(0.55 0.10 50 / 40%), transparent);
+}
+
+/* Why It Matters callout */
+.cacti-analysis-box {
+  background: linear-gradient(135deg, oklch(0.78 0.15 195 / 8%), oklch(0.72 0.18 155 / 5%));
+  border-left: 3px solid oklch(0.78 0.15 195 / 60%);
+  border-radius: 0 0.5rem 0.5rem 0;
+  position: relative;
+}
+
+/* Sources box */
+.cacti-sources-box {
+  background: oklch(0.16 0.015 260);
+  border: 1px solid oklch(0.55 0.10 50 / 20%);
+  border-radius: 0.5rem;
+}
+
+/* City edition accent colors */
+.cacti-city-kingman { --cacti-accent: oklch(0.78 0.15 195); }
+.cacti-city-bullhead { --cacti-accent: oklch(0.72 0.18 155); }
+.cacti-city-havasu { --cacti-accent: oklch(0.78 0.16 75); }
+.cacti-city-mohave { --cacti-accent: oklch(0.65 0.18 300); }
+
+/* Importance indicator dots */
+.cacti-importance {
+  display: inline-flex;
+  gap: 2px;
+}
+.cacti-importance-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: oklch(0.78 0.16 75);
+}
+.cacti-importance-dot.inactive {
+  background: oklch(0.30 0.02 260);
+}
+
+/* Footer ornament */
+.cacti-footer {
+  border-top: 2px solid oklch(0.55 0.10 50 / 40%);
+  position: relative;
+}
+.cacti-footer::before {
+  content: '◆';
+  position: absolute;
+  top: -0.6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: oklch(0.14 0.01 260);
+  padding: 0 0.75rem;
+  color: oklch(0.55 0.10 50 / 60%);
+  font-size: 0.75rem;
+}
+
+/* ===== PRINT STYLES FOR THE CACTI NEWSPAPER ===== */
+@media print {
+  /* Hide non-newspaper elements */
+  nav,
+  button,
+  .cacti-sidebar,
+  .cacti-status-bar,
+  .cacti-header,
+  [data-sidebar],
+  [role="navigation"],
+  .cacti-newspaper > div:first-child, /* Back button row */
+  .cacti-newspaper > div:nth-child(2) /* City tabs */ {
+    display: none !important;
+  }
+
+  /* Reset page */
+  body {
+    background: white !important;
+    color: #111 !important;
+    font-size: 11pt !important;
+    line-height: 1.4 !important;
+  }
+
+  * {
+    color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .cacti-newspaper {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Masthead styling for print */
+  .cacti-masthead {
+    background: white !important;
+    border: 2px solid #333 !important;
+    border-radius: 0 !important;
+    padding: 16pt 12pt !important;
+    margin-bottom: 12pt !important;
+  }
+
+  .cacti-masthead * {
+    color: #111 !important;
+  }
+
+  /* Breaking banner */
+  .cacti-breaking-banner {
+    background: #fff5f5 !important;
+    border: 2px solid #c00 !important;
+    border-radius: 0 !important;
+    page-break-inside: avoid;
+  }
+
+  .cacti-breaking-banner * {
+    color: #c00 !important;
+  }
+
+  /* Lead story */
+  .cacti-lead-story {
+    border-left: 3pt solid #333 !important;
+    page-break-inside: avoid;
+  }
+
+  /* Analysis box */
+  .cacti-analysis-box {
+    background: #f5f5f0 !important;
+    border-left: 3pt solid #555 !important;
+    page-break-inside: avoid;
+  }
+
+  /* Sources box */
+  .cacti-sources-box {
+    background: #f9f9f6 !important;
+    border: 1pt solid #ccc !important;
+    page-break-inside: avoid;
+  }
+
+  /* Section headers */
+  .cacti-section-header {
+    border-bottom: 1pt solid #333 !important;
+  }
+
+  .cacti-section-header * {
+    color: #333 !important;
+  }
+
+  /* Ornaments */
+  .cacti-ornament span {
+    color: #555 !important;
+  }
+
+  .cacti-ornament::before,
+  .cacti-ornament::after {
+    border-color: #ccc !important;
+  }
+
+  /* Category badges for print */
+  [class*="cacti-cat-"] {
+    background: white !important;
+    border: 1pt solid #333 !important;
+    color: #333 !important;
+  }
+
+  /* Footer */
+  .cacti-footer {
+    border-top: 2pt solid #333 !important;
+    margin-top: 24pt !important;
+    padding-top: 12pt !important;
+  }
+
+  .cacti-footer * {
+    color: #333 !important;
+  }
+
+  /* Newspaper columns */
+  .newspaper-columns {
+    column-count: 2 !important;
+    column-gap: 18pt !important;
+    column-rule: 1pt solid #ccc !important;
+  }
+
+  /* Brief items */
+  .cacti-brief-item {
+    background: white !important;
+    border: 1pt solid #ddd !important;
+    page-break-inside: avoid;
+  }
+
+  /* General text */
+  h1, h2, h3, h4, h5, h6 {
+    color: #111 !important;
+  }
+
+  p, span, div {
+    color: #333 !important;
+  }
+
+  /* Page margins */
+  @page {
+    margin: 0.6in;
+    size: letter;
+  }
+
+  /* Avoid page breaks in articles */
+  .cacti-column-story,
+  .cacti-brief-item {
+    page-break-inside: avoid;
+  }
+
+  /* Hide SVG logos in print - use text instead */
+  .cacti-masthead svg {
+    filter: grayscale(1) !important;
+  }
+}
