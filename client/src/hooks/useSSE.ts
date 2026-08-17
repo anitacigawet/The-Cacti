@@ -9,7 +9,8 @@ export type SSEEvent = {
 export type SSEStatus = "connecting" | "connected" | "disconnected" | "error";
 
 export function useSSE() {
-  const [status, setStatus] = useState<SSEStatus>("disconnected");
+  const showroom = import.meta.env.VITE_SHOWROOM_MODE === "1";
+  const [status, setStatus] = useState<SSEStatus>(showroom ? "connected" : "disconnected");
   const [lastEvent, setLastEvent] = useState<SSEEvent | null>(null);
   const [eventCount, setEventCount] = useState(0);
   const eventSourceRef = useRef<EventSource | null>(null);
@@ -18,6 +19,10 @@ export function useSSE() {
   const maxReconnectAttempts = 5;
 
   const connect = useCallback(() => {
+    if (showroom) {
+      setStatus("connected");
+      return;
+    }
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
     }
@@ -88,9 +93,13 @@ export function useSSE() {
     } catch {
       setStatus("error");
     }
-  }, []);
+  }, [showroom]);
 
   const disconnect = useCallback(() => {
+    if (showroom) {
+      setStatus("connected");
+      return;
+    }
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
@@ -99,7 +108,7 @@ export function useSSE() {
       clearTimeout(reconnectTimeoutRef.current);
     }
     setStatus("disconnected");
-  }, []);
+  }, [showroom]);
 
   useEffect(() => {
     connect();

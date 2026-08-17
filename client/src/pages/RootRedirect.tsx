@@ -15,7 +15,7 @@ export default function RootRedirect() {
 
   useEffect(() => {
     if (loading) return;
-    setLocation(user ? "/dashboard" : "/newspaper");
+    setLocation(import.meta.env.VITE_SHOWROOM_MODE === "1" ? "/newspaper" : user ? "/dashboard" : "/newspaper");
   }, [loading, user, setLocation]);
 
   return (

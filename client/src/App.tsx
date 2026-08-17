@@ -54,6 +54,11 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider defaultTheme="dark">
         <TooltipProvider>
+          {import.meta.env.VITE_SHOWROOM_MODE === "1" && (
+            <div className="sticky top-0 z-[100] border-b border-primary/30 bg-background/95 px-4 py-2 text-center text-xs text-primary backdrop-blur">
+              Showroom mode · fictional civic records · collection, model providers, email, and accounts are disconnected
+            </div>
+          )}
           <Toaster
             theme="dark"
             toastOptions={{

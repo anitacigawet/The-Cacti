@@ -5,6 +5,7 @@ import { createRoot } from "react-dom/client";
 import superjson from "superjson";
 import App from "./App";
 import "./index.css";
+import { createDemoLink } from "@/lib/demoLink";
 
 const queryClient = new QueryClient();
 
@@ -21,12 +22,14 @@ queryClient.getMutationCache().subscribe((event) => {
 });
 
 const trpcClient = trpc.createClient({
-  links: [
-    httpBatchLink({
-      url: "/api/trpc",
-      transformer: superjson,
-    }),
-  ],
+  links: import.meta.env.VITE_SHOWROOM_MODE === "1"
+    ? [createDemoLink()]
+    : [
+        httpBatchLink({
+          url: "/api/trpc",
+          transformer: superjson,
+        }),
+      ],
 });
 
 createRoot(document.getElementById("root")!).render(
