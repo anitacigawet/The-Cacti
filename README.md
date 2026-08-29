@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/screenshots/the-cacti-banner.png" alt="The Cacti, framed by two cactus-eye marks against an Arizona sky and desert earth." width="1000">
+</p>
+
 # The Cacti
 
 **A self-hosted civic reading and research workspace that gathers Mohave County public records and regional news into one place.**
