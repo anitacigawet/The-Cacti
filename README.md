@@ -2,7 +2,7 @@
   <img src="docs/screenshots/the-cacti-banner.png" alt="The Cacti, framed by two cactus-eye marks against an Arizona sky and desert earth." width="1000">
 </p>
 
-# The Cacti
+## What is this?
 
 **A self-hosted civic reading and research workspace that gathers Mohave County public records and regional news into one place.**
 
@@ -16,7 +16,7 @@ The Cacti collects material from local government pages, public records, RSS fee
 
 ---
 
-## Who this is for
+## Who is this for?
 
 You might be:
 
@@ -46,7 +46,7 @@ The application follows a simple cycle:
 
 ---
 
-## What is inside
+### What is inside
 
 - **City newspaper editions** for Kingman, Bullhead City, Lake Havasu City, Mohave County, and broader Arizona groupings.
 - **Searchable source documents** with categories, locations, dates, summaries, and links to the original material.
@@ -60,7 +60,7 @@ The application follows a simple cycle:
 
 ---
 
-## Why the project is structured this way
+### Why the project is structured this way
 
 Local information is usually not absent; it is fragmented. A city notice may live on one page, a county agenda on another, and regional reporting somewhere else. Following a subject means remembering which sites exist, checking each one repeatedly, and reconstructing the sequence by hand.
 
@@ -70,7 +70,7 @@ The project is not designed to determine what is true on a reader's behalf. It i
 
 ---
 
-## How AI is used—and where human judgment remains necessary
+### How AI is used—and where human judgment remains necessary
 
 The Cacti uses language models to classify documents, extract entities, summarize material, answer questions, and draft newspaper stories and reports. Those outputs can be incomplete, misleading, or wrong even when they cite a real source.
 
@@ -80,7 +80,7 @@ The repository contains no prebuilt dossiers and no runtime document collection.
 
 ---
 
-## Try it locally
+## Running it locally
 
 > **Heads up:** this is currently a self-hosted developer project. You will need to clone the repository, configure Google OAuth, and provide your own LLM API key before owner-only functions can run. Anonymous pages can be viewed without signing in.
 
@@ -134,7 +134,9 @@ The database and settings are written under `data/`, which is excluded from Git.
 
 ---
 
-## What works today
+## ⚙️ Extreme technicals below
+
+### What works today
 
 - Local SQLite persistence with automatic migrations.
 - Google OAuth and three access tiers.
@@ -146,7 +148,7 @@ The database and settings are written under `data/`, which is excluded from Git.
 - Optional owner email notifications through Resend.
 - Production build and Railway configuration.
 
-## Known limits
+### Known limits
 
 - Public websites change; individual source adapters may stop working and require maintenance.
 - The default source catalog is a starting point, not a comprehensive record of Mohave County.
@@ -156,7 +158,7 @@ The database and settings are written under `data/`, which is excluded from Git.
 
 ---
 
-## How the repository is organized
+### How the repository is organized
 
 - **`client/`** — React application: public reading views, research views, and owner settings.
 - **`server/`** — Express and tRPC backend, ingestion pipeline, authentication, alerts, and LLM routing.
@@ -170,7 +172,7 @@ The main regional adaptation points are documented in [Forking The Cacti](FORKIN
 
 ---
 
-## Suggestions and contributions
+### Suggestions and contributions
 
 Bug reports, thoughtful suggestions, and focused pull requests are welcome. This is a portfolio project rather than a supported public service, so submissions may remain open and are not guaranteed to be implemented.
 
@@ -178,7 +180,7 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting changes. Do not
 
 ---
 
-## Credits
+### Credits
 
 The Cacti was conceived and directed in Kingman, Arizona, as an exploration of how regional public information can become easier to read without losing its connection to the original record.
 
@@ -186,13 +188,13 @@ The application uses open-source libraries across the React, Express, tRPC, Driz
 
 ---
 
-## A note on intent
+### A note on intent
 
 The project begins with a modest idea: understanding local activity should not require knowing every website to check in advance. A useful civic tool can gather the starting points, show where the material came from, and leave the final judgment with the reader.
 
 ---
 
-## License
+### License
 
 The Cacti is **source-available**, not open source. It is licensed by **ScootSolute LLC** under the [PolyForm Noncommercial License 1.0.0](LICENSE).
 
