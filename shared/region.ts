@@ -1,9 +1,8 @@
 /**
  * Region configuration — the canonical instance covers Mohave County, Arizona.
  *
- * This is the **only** file forkers need to edit (along with prompt templates
- * in `server/_core/llm/prompts/` and `config/data-sources.json`) to adapt the
- * project for a different region. See FORKING.md.
+ * Region names, editions, and newspaper labels used across the application
+ * are kept here so the client and server use the same values.
  */
 
 export const REGION_NAME = "Mohave County";

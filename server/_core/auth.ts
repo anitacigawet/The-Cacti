@@ -67,11 +67,14 @@ function parseCookie(header: string | undefined, name: string): string | null {
   return null;
 }
 
+function secureCookieSuffix(): string {
+  return ENV.publicUrl.startsWith("https://") ? "; Secure" : "";
+}
+
 export function setSessionCookie(res: Response, token: string): void {
-  const secure = ENV.isProduction ? "; Secure" : "";
   res.setHeader(
     "Set-Cookie",
-    `${SESSION_COOKIE}=${encodeURIComponent(token)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_MAX_AGE_SEC}${secure}`
+    `${SESSION_COOKIE}=${encodeURIComponent(token)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_MAX_AGE_SEC}${secureCookieSuffix()}`
   );
 }
 
@@ -122,10 +125,9 @@ export function buildGoogleAuthUrl(state: string): string {
 }
 
 export function setOauthStateCookie(res: Response, state: string): void {
-  const secure = ENV.isProduction ? "; Secure" : "";
   res.setHeader(
     "Set-Cookie",
-    `${STATE_COOKIE}=${encodeURIComponent(state)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${STATE_MAX_AGE_SEC}${secure}`
+    `${STATE_COOKIE}=${encodeURIComponent(state)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${STATE_MAX_AGE_SEC}${secureCookieSuffix()}`
   );
 }
 

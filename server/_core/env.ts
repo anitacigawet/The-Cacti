@@ -1,6 +1,4 @@
 export const ENV = {
-  isProduction: process.env.NODE_ENV === "production",
-
   // Gemini (https://ai.google.dev/api)
   geminiApiKey: process.env.GEMINI_API_KEY ?? "",
   geminiModel: process.env.GEMINI_MODEL ?? "gemini-2.5-flash",

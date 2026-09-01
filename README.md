@@ -29,79 +29,70 @@ The Cacti is for people who want to follow Mohave County public information with
 
 ## Running it locally
 
-The Cacti is self-hosted. A new installation contains no records until you configure sources and run the ingestion pipeline.
+The quickest option is the portable runtime ZIP on the [Releases page](https://github.com/anitacigawet/The-Cacti/releases). It includes the built application and production dependencies, so it needs only Node.js. Extract it and run `run.bat` on Windows or `sh run.sh` on macOS or Linux. The included [runtime guide](RUNTIME.md) covers configuration and first launch.
 
-You will need:
+To run from source, you will need:
 
-- [Node.js](https://nodejs.org/) 20 or newer.
+- [Node.js](https://nodejs.org/) 20.19 or newer, or 22.12 or newer.
 - [pnpm](https://pnpm.io/installation) 10.
-- A Google OAuth web application.
-- A long random JWT secret.
-- An API key for Gemini, OpenAI, or DeepSeek.
+- A Google OAuth web application if you want sign-in.
+- An API key for Gemini, OpenAI, or DeepSeek if you want generated analysis.
 
-Clone and install the project:
+Clone and start the project:
 
 ```bash
 git clone https://github.com/anitacigawet/The-Cacti.git
 cd The-Cacti
-
-pnpm install
+pnpm install --frozen-lockfile
 cp .env.example .env
+pnpm dev
 ```
 
-Add the following to `.env`:
+Open [http://localhost:3002/about](http://localhost:3002/about). On Windows, `start.bat` runs the same development server and looks for an available port beginning with 3002.
 
-- your Google OAuth client ID and secret;
-- a `JWT_SECRET`;
-- the owner email as `OWNER_EMAIL`;
-- at least one supported AI provider key, either in `.env` or later through Settings.
-
-Use this authorized redirect URI for local Google OAuth:
+For Google sign-in, add a long random `JWT_SECRET`, the Google OAuth credentials, and your `OWNER_EMAIL` to `.env`. Use this authorized redirect URI:
 
 ```text
 http://localhost:3002/api/auth/google/callback
 ```
 
-Start the application:
-
-```bash
-pnpm dev
-```
-
-Open [http://localhost:3002/about](http://localhost:3002/about). On Windows, `start.bat` runs the same local startup flow and looks for an available port beginning with 3002.
-
-After signing in with the owner email:
+After signing in as the owner:
 
 1. Open **Settings** and choose an AI provider.
 2. Open **Data Monitor** and seed the default source list.
 3. Run the pipeline manually once.
 4. Review the collected documents and generated output before enabling a schedule.
 
-The database and settings are stored under `data/`, which Git ignores. See [Configuration](docs/CONFIGURATION.md) for the complete environment reference.
+The database and settings stay under the ignored `data/` directory. See [Configuration](docs/CONFIGURATION.md) for the environment reference.
 
-## ⚙️ Extreme technicals below
+## Extreme technicals below
 
 ### Known limits
 
-- The default source catalog does not contain every Mohave County public-information source.
+- The default catalog does not contain every Mohave County public-information source.
 - Public websites change, so individual source adapters can stop working and require maintenance.
-- A fresh installation does not include a populated database.
+- A fresh installation contains no collected records.
 
-### How the repository is organized
+### Repository layout
 
-- **`client/`** — React application and public, research, and owner views.
-- **`server/`** — Express and tRPC server, ingestion pipeline, authentication, alerts, and AI routing.
-- **`shared/`** — region settings and types used by the client and server.
+- **`client/`** — React application and its public, research, and owner views.
+- **`server/`** — Express and tRPC server, ingestion, authentication, alerts, and AI routing.
+- **`shared/`** — region values used by the client and server.
 - **`config/`** — default Mohave County source catalog.
-- **`drizzle/`** — SQLite schema and migrations.
-- **`docs/`** — configuration documentation and screenshots.
-- **`scripts/`** — maintenance utilities.
+- **`drizzle/`** — SQLite schema and runtime migrations.
+- **`docs/`** — configuration and README images.
 
-Regional adaptation points are documented in [Forking The Cacti](FORKING.md).
+### Builds
 
-### Contributions
+```bash
+pnpm check
+pnpm build
+pnpm build:showroom
+```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) before opening an issue or pull request. Do not include API keys, account data, runtime databases, or personal records.
+The normal production build goes to `dist/`. The showroom build goes to `dist/showroom/`; it uses a fixed demonstration dataset in the browser and makes no application API calls. Serve that directory with SPA fallback enabled so its routes return `index.html`.
+
+`pnpm release:stage` builds the application and creates a portable production tree under `.release/runtime/`. That staging directory is what the release ZIP contains.
 
 ### License
 

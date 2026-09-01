@@ -1,52 +1,23 @@
 # Configuration
 
-The Cacti is configured through two layers:
-
-1. **`.env` file** at the project root (loaded at startup, used as the fallback / default).
-2. **Settings UI** at `/settings` in the running app (stored in `data/settings.json`, takes precedence at runtime).
-
-You can use either. The Settings UI is the recommended path because changes apply without restart.
-
----
-
-## LLM providers
-
-The Cacti supports three LLM providers behind a single internal interface. Configure as many as you want, then pick the active one in Settings.
-
-### Provider order
-
-| Order | Provider | Default model | Console |
-|-------|----------|---------------|---------|
-| 1 (default) | Google Gemini | `gemini-2.5-flash` | https://aistudio.google.com/app/apikey |
-| 2 | OpenAI | `gpt-4o-mini` | https://platform.openai.com/api-keys |
-| 3 | DeepSeek | `deepseek-v4-flash` | https://platform.deepseek.com/api_keys |
-
-### Switching providers at runtime
-
-Open `/settings`. The **LLM Configuration** card has:
-
-- **Active Provider** dropdown — choose which provider handles all LLM calls right now.
-- **Per-provider tabs** — paste your API key, pick a model (preset suggestions or any custom slug your account supports), and **Test connection** to verify.
-- **Rate limiting** — optional throttle (requests/sec) applied to whichever provider is active.
-
-Settings changes invalidate the LLM provider singleton, so the next request picks them up immediately.
-
-### Custom model slugs
-
-The model field accepts any slug your provider account supports — not just the suggestions in the dropdown. Useful when a provider releases a new model before this app's defaults are updated.
-
----
+Server, storage, authentication, and notification settings come from `.env` at startup. The Settings page stores LLM provider, model, API-key, and rate-limit choices in `data/settings.json`; those LLM choices take precedence over their `.env` fallbacks without a restart.
 
 ## Environment variables
 
-Documented in [`.env.example`](../.env.example). Summary:
+Copy `.env.example` to `.env` and set only the features you plan to use.
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `NODE_ENV` | `development` | Standard Node env flag |
-| `PORT` | `3000` | HTTP port |
-| `DATABASE_PATH` | `./data/app.db` | SQLite file location |
-| `LLM_PROVIDER` | (unset) | Active provider fallback if Settings unset |
+| Variable | Example default | Purpose |
+|----------|-----------------|---------|
+| `PORT` | `3002` | First HTTP port the server tries |
+| `DATABASE_PATH` | `./data/app.db` | SQLite database file |
+| `PUBLIC_URL` | `http://localhost:3002` | Base URL used for OAuth callbacks and secure-cookie behavior |
+| `GOOGLE_OAUTH_CLIENT_ID` | — | Google OAuth web client ID |
+| `GOOGLE_OAUTH_CLIENT_SECRET` | — | Google OAuth web client secret |
+| `JWT_SECRET` | — | Secret used to sign login cookies |
+| `OWNER_EMAIL` | — | Email promoted to owner on first sign-in |
+| `RESEND_API_KEY` | — | Optional Resend key for email alerts |
+| `RESEND_FROM_EMAIL` | — | Verified sender used for email alerts |
+| `LLM_PROVIDER` | `gemini` | Provider fallback if Settings has no choice |
 | `GEMINI_API_KEY` | — | Gemini key |
 | `GEMINI_MODEL` | `gemini-2.5-flash` | Gemini model |
 | `OPENAI_API_KEY` | — | OpenAI key |
@@ -54,22 +25,28 @@ Documented in [`.env.example`](../.env.example). Summary:
 | `DEEPSEEK_API_KEY` | — | DeepSeek key |
 | `DEEPSEEK_MODEL` | `deepseek-v4-flash` | DeepSeek model |
 
-The Settings UI overrides any of these at runtime.
+Generate a JWT secret with:
 
----
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"
+```
+
+Rotating `JWT_SECRET` logs out existing users. When `PUBLIC_URL` begins with `https://`, authentication cookies are marked `Secure`; local `http://localhost` installations remain usable over HTTP.
+
+## LLM providers
+
+The Cacti supports Gemini, OpenAI, and DeepSeek behind one internal interface. Open `/settings` to choose the active provider, enter a key, set a model slug, test the connection, or apply a request-per-second limit. The model field accepts any slug available to your provider account.
 
 ## Data sources
 
-Default scrape/RSS sources live in [`config/data-sources.json`](../config/data-sources.json) and are seeded on first run. Add or remove sources directly in the JSON file (server reload required) or via the Ingestion page in the UI.
+The default source catalog is `config/data-sources.json`. The **seed sources** action in Data Monitor reads that file and adds the enabled entries to the database. You can then manage sources in the interface. Editing the JSON changes what future seed actions use; it does not rewrite existing database rows.
 
----
+## Storage
 
-## Storage layout
-
-```
+```text
 data/
-  app.db              SQLite (Drizzle) — users, sources, alerts, reports, etc.
-  settings.json       Settings UI persistence (API keys, model picks, rate-limit)
+  app.db          SQLite records, users, sources, alerts, and reports
+  settings.json   LLM provider settings entered through the interface
 ```
 
-`data/` is gitignored. To reset the app to a fresh state, delete it.
+`data/` and `.env` are ignored by Git. Keep both private and back up `data/` if you want to preserve an installation.

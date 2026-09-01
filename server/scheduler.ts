@@ -127,8 +127,8 @@ async function executePipeline(): Promise<void> {
             }
 
             // Pre-flight: short-circuit non-Arizona docs before spending
-            // analysis tokens. ~42% of feed content is national wire that
-            // we never surface (see scripts/inspect-oos-sources.ts).
+            // analysis tokens. Some feeds carry national wire stories that
+            // the regional views do not surface.
             const preflight = await isAboutArizona(item.title, item.content);
             totalTokens += preflight.tokens;
             if (!preflight.isArizona) {
