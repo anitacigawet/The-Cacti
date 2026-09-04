@@ -27,8 +27,10 @@
     "dev": "cross-env NODE_ENV=development tsx watch server/_core/index.ts",
     "build": "vite build && esbuild server/_core/production.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.js",
     "build:showroom": "cross-env VITE_SHOWROOM_MODE=1 vite build --outDir ../dist/showroom",
+    "preview:showroom": "vite preview --outDir ../dist/showroom",
     "start": "node dist/index.js",
     "check": "tsc --noEmit",
+    "verify": "pnpm check && pnpm build && pnpm build:showroom",
     "release:stage": "pnpm build && node -e \"require('node:fs').rmSync('.release/runtime',{recursive:true,force:true})\" && pnpm --config.auto-install-peers=false --filter the-cacti deploy --prod --legacy .release/runtime"
   },
   "dependencies": {

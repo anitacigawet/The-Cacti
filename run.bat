@@ -4,7 +4,7 @@ cd /d "%~dp0"
 
 if not exist ".env" copy /Y ".env.example" ".env" >nul
 
-echo The Cacti is starting at http://localhost:3002/
+echo The server URL will be printed below.
 node dist\index.js
 
 if errorlevel 1 (

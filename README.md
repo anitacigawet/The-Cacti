@@ -33,7 +33,7 @@ The quickest option is the portable runtime ZIP on the [Releases page](https://g
 
 To run from source, you will need:
 
-- [Node.js](https://nodejs.org/) 20.19 or newer, or 22.12 or newer.
+- [Node.js](https://nodejs.org/) 20.19+ on the Node 20 line, or 22.12+.
 - [pnpm](https://pnpm.io/installation) 10.
 - A Google OAuth web application if you want sign-in.
 - An API key for Gemini, OpenAI, or DeepSeek if you want generated analysis.
@@ -48,13 +48,15 @@ cp .env.example .env
 pnpm dev
 ```
 
-Open [http://localhost:3002/about](http://localhost:3002/about). On Windows, `start.bat` runs the same development server and looks for an available port beginning with 3002.
+Open the `Server running on ...` address printed in the console, then visit its `/about` route. It normally starts at [http://localhost:3002](http://localhost:3002), but selects a higher free port when that port is busy. On Windows, `start.bat` runs the same development server.
 
 For Google sign-in, add a long random `JWT_SECRET`, the Google OAuth credentials, and your `OWNER_EMAIL` to `.env`. Use this authorized redirect URI:
 
 ```text
 http://localhost:3002/api/auth/google/callback
 ```
+
+If 3002 is unavailable and you need sign-in, stop the server, set `PORT` and `PUBLIC_URL` to the same chosen free port, update the Google authorized redirect URI to that port, and restart.
 
 After signing in as the owner:
 
@@ -66,6 +68,8 @@ After signing in as the owner:
 The database and settings stay under the ignored `data/` directory. See [Configuration](docs/CONFIGURATION.md) for the environment reference.
 
 ## Extreme technicals below
+
+Maintainers and coding agents working from source should begin with [START_HERE.md](https://github.com/anitacigawet/The-Cacti/blob/main/START_HERE.md).
 
 ### Known limits
 
@@ -85,14 +89,12 @@ The database and settings stay under the ignored `data/` directory. See [Configu
 ### Builds
 
 ```bash
-pnpm check
-pnpm build
-pnpm build:showroom
+pnpm verify
 ```
 
-The normal production build goes to `dist/`. The showroom build goes to `dist/showroom/`; it uses a fixed demonstration dataset in the browser and makes no application API calls. Serve that directory with SPA fallback enabled so its routes return `index.html`.
+That command runs type checking, the normal production build, and the showroom build. The normal build goes to `dist/`. The showroom build goes to `dist/showroom/`; it uses a fixed demonstration dataset in the browser and makes no application API calls. Run `pnpm preview:showroom` to serve it locally with SPA fallback.
 
-`pnpm release:stage` builds the application and creates a portable production tree under `.release/runtime/`. That staging directory is what the release ZIP contains.
+`pnpm release:stage` builds the application and creates a portable production tree under `.release/runtime/`. That staging directory is what the release ZIP contains; ZIP creation and checksums are separate release steps.
 
 ### License
 
