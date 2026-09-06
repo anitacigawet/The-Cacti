@@ -12,6 +12,7 @@ import { invokeLLM } from "./_core/llm.js";
 import { isAboutArizona } from "./routers/ingestion.js";
 import { generateForCity } from "./routers/news.js";
 import { CITIES as REGION_CITIES } from "../shared/region.js";
+import { scrapeRSS, scrapeWebpage } from "./utils/source-parsers.js";
 
 let schedulerInterval: ReturnType<typeof setInterval> | null = null;
 let isRunning = false;
@@ -73,47 +74,10 @@ async function executePipeline(): Promise<void> {
         let scrapedItems: Array<{ title: string; content: string; link: string; date: string }> = [];
 
         if (source.type === "rss") {
-          const response = await fetch(source.url, {
-            headers: { "User-Agent": "Cacti-CivicIntelligence/1.0", Accept: "application/rss+xml,application/xml,text/xml" },
-            signal: AbortSignal.timeout(15000),
-          });
-          if (response.ok) {
-            const xml = await response.text();
-            const itemRegex = /<item[^>]*>([\s\S]*?)<\/item>/gi;
-            const entryRegex = /<entry[^>]*>([\s\S]*?)<\/entry>/gi;
-            const allMatches: RegExpExecArray[] = [];
-            let m: RegExpExecArray | null;
-            while ((m = itemRegex.exec(xml)) !== null) allMatches.push(m);
-            while ((m = entryRegex.exec(xml)) !== null) allMatches.push(m);
-
-            for (const itemMatch of allMatches) {
-              const ix = itemMatch[1];
-              const titleM = ix.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-              const descM = ix.match(/<description[^>]*>([\s\S]*?)<\/description>/i) || ix.match(/<content[^>]*>([\s\S]*?)<\/content>/i);
-              const linkM = ix.match(/<link[^>]*>([\s\S]*?)<\/link>/i) || ix.match(/<link[^>]*href="([^"]+)"/i);
-              const dateM = ix.match(/<pubDate[^>]*>([\s\S]*?)<\/pubDate>/i) || ix.match(/<published[^>]*>([\s\S]*?)<\/published>/i);
-
-              const title = titleM ? titleM[1].replace(/<!\[CDATA\[|\]\]>/g, "").trim() : "Untitled";
-              const content = descM ? descM[1].replace(/<!\[CDATA\[|\]\]>/g, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() : "";
-              const link = linkM ? linkM[1].replace(/<!\[CDATA\[|\]\]>/g, "").trim() : "";
-              const date = dateM ? dateM[1].trim() : new Date().toISOString();
-
-              if (title !== "Untitled") scrapedItems.push({ title, content: content.substring(0, 5000), link, date });
-            }
-          }
+          scrapedItems = await scrapeRSS(source.url);
         } else if (source.type === "webpage") {
-          const response = await fetch(source.url, {
-            headers: { "User-Agent": "Cacti-CivicIntelligence/1.0", Accept: "text/html" },
-            signal: AbortSignal.timeout(15000),
-          });
-          if (response.ok) {
-            const html = await response.text();
-            const textContent = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-              .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-              .replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-            const titleMatch = html.match(/<title[^>]*>(.*?)<\/title>/i);
-            scrapedItems.push({ title: titleMatch ? titleMatch[1].trim() : "Untitled", content: textContent.substring(0, 10000), link: source.url, date: new Date().toISOString() });
-          }
+          const page = await scrapeWebpage(source.url);
+          scrapedItems.push({ ...page, link: source.url, date: new Date().toISOString() });
         }
 
         totalDocsFound += scrapedItems.length;
@@ -311,9 +275,13 @@ async function executePipeline(): Promise<void> {
             for (const a of articles.slice(0, 10)) lines.push(`- **${a.headline}** (${a.city})`);
           }
           const { notifyOwner } = await import("./_core/notification.js");
-          await notifyOwner({ title: `Cacti Weekly Digest - ${now.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`, content: lines.join("\n") });
-          await db.update(ingestionSchedule).set({ lastDigestSentAt: now }).where(eq(ingestionSchedule.id, sched.id));
-          console.log("[Cacti Scheduler] Weekly digest sent.");
+          const sent = await notifyOwner({ title: `Cacti Weekly Digest - ${now.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`, content: lines.join("\n") });
+          if (sent) {
+            await db.update(ingestionSchedule).set({ lastDigestSentAt: now }).where(eq(ingestionSchedule.id, sched.id));
+            console.log("[Cacti Scheduler] Weekly digest sent.");
+          } else {
+            console.warn("[Cacti Scheduler] Weekly digest was not sent; a later scheduled run can retry.");
+          }
         }
       }
     } catch (digestErr: unknown) {

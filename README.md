@@ -92,7 +92,7 @@ Maintainers and coding agents working from source should begin with [START_HERE.
 pnpm verify
 ```
 
-That command runs type checking, the normal production build, and the showroom build. The normal build goes to `dist/`. The showroom build goes to `dist/showroom/`; it uses a fixed demonstration dataset in the browser and makes no application API calls. Run `pnpm preview:showroom` to serve it locally with SPA fallback.
+That command runs type checking, isolated regression tests, the normal production build, and the showroom build. The normal build goes to `dist/`. The showroom build goes to `dist/showroom/`; it uses a fixed demonstration dataset in the browser and makes no application API calls. Run `pnpm preview:showroom` to serve it locally with SPA fallback.
 
 `pnpm release:stage` builds the application and creates a portable production tree under `.release/runtime/`. That staging directory is what the release ZIP contains; ZIP creation and checksums are separate release steps.
 

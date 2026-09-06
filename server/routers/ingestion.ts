@@ -11,110 +11,9 @@ import {
 import { desc, eq, sql, gte } from "drizzle-orm";
 import { loadDataSources } from "../utils/load-data-sources.js";
 import { invokeLLM } from "../_core/llm.js";
-
-async function scrapeWebpage(
-  url: string
-): Promise<{ title: string; content: string; links: string[] }> {
-  const response = await fetch(url, {
-    headers: {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 (compatible; TheCactiBot/1.0; +https://github.com/anitacigawet/The-Cacti)",
-      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    },
-    signal: AbortSignal.timeout(15000),
-  });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-  const html = await response.text();
-  const textContent = html
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-    .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, "")
-    .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, "")
-    .replace(/<header[^>]*>[\s\S]*?<\/header>/gi, "")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'")
-    .replace(/\s+/g, " ").trim();
-
-  // Title resolution: <title> first, then OG title, then first <h1>, then domain.
-  // Lots of CMSes ship empty <title>\n</title> tags on dynamic pages.
-  const cleanText = (s: string) =>
-    s.replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-  const titleM = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-  const ogM = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i);
-  const h1M = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
-  const fromTitle = titleM ? cleanText(titleM[1]) : "";
-  const fromOg = ogM ? cleanText(ogM[1]) : "";
-  const fromH1 = h1M ? cleanText(h1M[1]) : "";
-  const domain = (() => { try { return new URL(url).hostname; } catch { return "page"; } })();
-  const title = fromTitle || fromOg || fromH1 || domain;
-
-  const linkRegex = /href="([^"]+)"/gi;
-  const links: string[] = [];
-  let m: RegExpExecArray | null;
-  while ((m = linkRegex.exec(html)) !== null) {
-    const href = m[1];
-    if (href.startsWith("http") && !href.includes("javascript:") &&
-        !href.endsWith(".css") && !href.endsWith(".js") &&
-        !href.endsWith(".png") && !href.endsWith(".jpg")) {
-      links.push(href);
-    }
-  }
-
-  return { title, content: textContent.substring(0, 10000), links: links.slice(0, 50) };
-}
-
-async function scrapeRSS(
-  url: string
-): Promise<Array<{ title: string; content: string; link: string; date: string }>> {
-  // TownNews-class CMSes (e.g. kdminer.com, havasunews.com, mohavedailynews.com)
-  // use content negotiation: a browser-style UA gets HTML, while a feed-reader
-  // UA gets the actual RSS XML. So for RSS we identify as a reader.
-  const response = await fetch(url, {
-    headers: {
-      "User-Agent": "TheCactiBot/1.0 (+https://github.com/anitacigawet/The-Cacti) feedfetcher",
-      Accept: "application/rss+xml, application/atom+xml, application/xml;q=0.9, text/xml;q=0.8",
-    },
-    signal: AbortSignal.timeout(15000),
-  });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-  const xml = await response.text();
-  const items: Array<{ title: string; content: string; link: string; date: string }> = [];
-  const itemRegex = /<item[^>]*>([\s\S]*?)<\/item>/gi;
-  const entryRegex = /<entry[^>]*>([\s\S]*?)<\/entry>/gi;
-
-  const allItems: RegExpExecArray[] = [];
-  let m: RegExpExecArray | null;
-  while ((m = itemRegex.exec(xml)) !== null) allItems.push(m);
-  while ((m = entryRegex.exec(xml)) !== null) allItems.push(m);
-
-  for (const itemMatch of allItems) {
-    const ix = itemMatch[1];
-    const titleM = ix.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-    const descM = ix.match(/<description[^>]*>([\s\S]*?)<\/description>/i) ||
-      ix.match(/<content[^>]*>([\s\S]*?)<\/content>/i) ||
-      ix.match(/<summary[^>]*>([\s\S]*?)<\/summary>/i);
-    const linkM = ix.match(/<link[^>]*>([\s\S]*?)<\/link>/i) ||
-      ix.match(/<link[^>]*href="([^"]+)"/i);
-    const dateM = ix.match(/<pubDate[^>]*>([\s\S]*?)<\/pubDate>/i) ||
-      ix.match(/<published[^>]*>([\s\S]*?)<\/published>/i) ||
-      ix.match(/<updated[^>]*>([\s\S]*?)<\/updated>/i);
-
-    const title = titleM ? titleM[1].replace(/<!\[CDATA\[|\]\]>/g, "").trim() : "Untitled";
-    const content = descM
-      ? descM[1].replace(/<!\[CDATA\[|\]\]>/g, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
-      : "";
-    const link = linkM ? linkM[1].replace(/<!\[CDATA\[|\]\]>/g, "").trim() : "";
-    const date = dateM ? dateM[1].trim() : new Date().toISOString();
-
-    if (title && title !== "Untitled") {
-      items.push({ title, content: content.substring(0, 5000), link, date });
-    }
-  }
-
-  return items;
-}
+import { scrapeRSS, scrapeWebpage } from "../utils/source-parsers.js";
+import { generateForCity } from "./news.js";
+import { CITIES as REGION_CITIES } from "../../shared/region.js";
 
 /**
  * Cheap pre-flight check: is this article primarily about Arizona at all?
@@ -577,7 +476,7 @@ export const ingestionRouter = router({
 
   runPipeline: adminProcedure
     .input(z.object({ generateNews: z.boolean().default(true) }).optional())
-    .mutation(async () => {
+    .mutation(async ({ input }) => {
       const db = getDb();
       const sources = await db.select().from(ingestionSources).where(eq(ingestionSources.enabled, true));
 
@@ -591,9 +490,12 @@ export const ingestionRouter = router({
       let totalDocsFound = 0;
       let totalDocsAnalyzed = 0;
       let totalTokens = 0;
+      let articlesGenerated = 0;
+      let failures = 0;
       const logEntries: string[] = [`Pipeline started: ${sources.length} sources to process`];
 
       for (const source of sources) {
+        let sourceDocsAnalyzed = 0;
         try {
           logEntries.push(`\n--- Processing: ${source.name} (${source.type}) ---`);
           let scrapedItems: Array<{ title: string; content: string; link: string; date: string }> = [];
@@ -628,18 +530,21 @@ export const ingestionRouter = router({
                 category: source.category, city: source.city, publishedDate: item.date, analysis, entities,
               });
               totalDocsAnalyzed++;
+              sourceDocsAnalyzed++;
               logEntries.push(`STORED: ${item.title}`);
             } catch (itemErr: unknown) {
+              failures++;
               logEntries.push(`ERROR: ${item.title} - ${(itemErr as Error).message}`);
             }
           }
 
           await db.update(ingestionSources).set({
             lastScrapedAt: new Date(),
-            documentCount: sql`${ingestionSources.documentCount} + ${totalDocsAnalyzed}`,
+            documentCount: sql`${ingestionSources.documentCount} + ${sourceDocsAnalyzed}`,
             lastError: null, consecutiveFailures: 0, healthStatus: "healthy",
           }).where(eq(ingestionSources.id, source.id));
         } catch (sourceErr: unknown) {
+          failures++;
           logEntries.push(`SOURCE FAILED: ${source.name} - ${(sourceErr as Error).message}`);
           const [curSrc] = await db.select().from(ingestionSources).where(eq(ingestionSources.id, source.id));
           const fails = (curSrc?.consecutiveFailures ?? 0) + 1;
@@ -651,10 +556,26 @@ export const ingestionRouter = router({
         }
       }
 
+      if ((input?.generateNews ?? true) && totalDocsAnalyzed > 0) {
+        const edition = new Date().toISOString().split("T")[0];
+        for (const city of REGION_CITIES) {
+          try {
+            const generated = await generateForCity(city, edition);
+            articlesGenerated += generated.articles.length;
+            totalTokens += generated.tokens;
+            logEntries.push(`NEWS: ${city}: ${generated.articles.length} articles`);
+          } catch (error) {
+            failures++;
+            logEntries.push(`NEWS FAILED: ${city} - ${(error as Error).message}`);
+          }
+        }
+      }
+
       await db.update(ingestionRuns).set({
-        status: "completed",
+        status: failures > 0 ? "partial" : "completed",
         documentsFound: totalDocsFound,
         documentsAnalyzed: totalDocsAnalyzed,
+        articlesGenerated,
         tokensUsed: totalTokens,
         log: logEntries,
         completedAt: new Date(),
@@ -662,7 +583,7 @@ export const ingestionRouter = router({
 
       await db.update(ingestionSchedule).set({ lastRunAt: new Date() }).where(eq(ingestionSchedule.id, 1));
 
-      return { runId, sourcesProcessed: sources.length, totalDocumentsFound: totalDocsFound, totalDocumentsAnalyzed: totalDocsAnalyzed, totalTokens, log: logEntries };
+      return { runId, sourcesProcessed: sources.length, totalDocumentsFound: totalDocsFound, totalDocumentsAnalyzed: totalDocsAnalyzed, articlesGenerated, totalTokens, log: logEntries };
     }),
 
   getSchedule: adminProcedure.query(async () => {
@@ -825,7 +746,7 @@ export const ingestionRouter = router({
       content: digestContent,
     });
 
-    if (schedule) {
+    if (sent && schedule) {
       await db.update(ingestionSchedule).set({ lastDigestSentAt: new Date() }).where(eq(ingestionSchedule.id, schedule.id));
     }
 

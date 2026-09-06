@@ -305,7 +305,7 @@ export default function Dashboard() {
                       <div
                         key={d.name}
                         className="space-y-1.5 cursor-pointer group"
-                        onClick={() => setLocation(`/documents?search=${d.name}+impact`)}
+                        onClick={() => setLocation(`/documents?impact=${encodeURIComponent(d.name)}`)}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">

@@ -2,8 +2,9 @@ import { z } from "zod";
 import { adminProcedure, publicProcedure, router } from "../_core/trpc.js";
 import { getDb } from "../db.js";
 import { alertRules, alertInstances, documents } from "../../drizzle/schema.js";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, sql, getTableColumns } from "drizzle-orm";
 import { notifyOwner } from "../_core/notification.js";
+import { visibleAlerts } from "../_core/visibility.js";
 
 const alertRuleConfigSchema = z.object({
   keywords: z.array(z.string()).optional(),
@@ -80,15 +81,13 @@ export const alertRulesRouter = router({
         limit: z.number().min(1).max(100).default(50),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       const db = getDb();
-      if (input.status === "all") {
-        return await db.select().from(alertInstances).orderBy(desc(alertInstances.createdAt)).limit(input.limit);
-      }
       return await db
-        .select()
+        .select(getTableColumns(alertInstances))
         .from(alertInstances)
-        .where(eq(alertInstances.status, input.status))
+        .leftJoin(documents, eq(alertInstances.documentId, documents.id))
+        .where(and(visibleAlerts(ctx.user), input.status === "all" ? undefined : eq(alertInstances.status, input.status)))
         .orderBy(desc(alertInstances.createdAt))
         .limit(input.limit);
     }),
@@ -212,10 +211,11 @@ export const alertRulesRouter = router({
     return { evaluated: docs.length, newAlerts, rulesChecked: rules.length, criticalNotified: criticalAlerts.length };
   }),
 
-  stats: publicProcedure.query(async () => {
+  stats: publicProcedure.query(async ({ ctx }) => {
     const db = getDb();
     const [instances, rules] = await Promise.all([
-      db.select({ status: alertInstances.status, count: sql<number>`COUNT(*)` }).from(alertInstances).groupBy(alertInstances.status),
+      db.select({ status: alertInstances.status, count: sql<number>`COUNT(*)` }).from(alertInstances)
+        .leftJoin(documents, eq(alertInstances.documentId, documents.id)).where(visibleAlerts(ctx.user)).groupBy(alertInstances.status),
       db.select({ count: sql<number>`COUNT(*)` }).from(alertRules),
     ]);
 

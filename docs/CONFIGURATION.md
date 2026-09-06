@@ -41,6 +41,14 @@ The Cacti supports Gemini, OpenAI, and DeepSeek behind one internal interface. O
 
 The default source catalog is `config/data-sources.json`. The **seed sources** action in Data Monitor reads that file and adds the enabled entries to the database. You can then manage sources in the interface. Editing the JSON changes what future seed actions use; it does not rewrite existing database rows.
 
+Sources must use HTTP or HTTPS and resolve to public Internet addresses. Private-network addresses, URL credentials, and redirects to private destinations are rejected. Each request has a 15-second deadline, at most five redirects, and a 2 MiB limit on both received and decompressed data. RSS/Atom feeds allow up to 200 items and 128 nesting levels; malformed XML and document-type declarations are rejected. Failures appear in Data Monitor. These rules apply to manual and scheduled collection.
+
+## Access and development
+
+Owners see current records. Invited users see records at least three hours old; anonymous readers see records at least 24 hours old. The same delay applies to document-derived views, alerts, generated news, reports, and live metrics. Generated news and reports use their generation time for this delay.
+
+The development frontend serves only client files, shared modules, and dependencies. Runtime data and server source are excluded; browser-triggered editor launching is disabled. Use the production build when running the application for others.
+
 ## Storage
 
 ```text

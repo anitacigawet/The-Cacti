@@ -35,7 +35,7 @@ Published assets:
 
 The source tree, portable runtime, and static showroom are separate deliverables. The runtime ZIP contains the built server, built client, migrations, configuration, launchers, documentation, and production packages. The showroom ZIP is a static browser-only demonstration.
 
-On 2026-09-04, two requested Codex Security deep-scan launches failed inside `begin-deep-scan` before discovery started. No scan ID, findings, or report were produced. This is not a security pass, and no security scan is currently running.
+The source was updated after manual code and security review on 2026-09-06. These updates are not included in the existing prerelease ZIPs.
 
 ## Architecture at a glance
 
@@ -67,12 +67,12 @@ pnpm release:stage
 ```
 
 - `pnpm dev` starts the development server.
-- `pnpm verify` runs type checking, the production build, and the showroom build.
+- `pnpm verify` runs type checking, isolated regression tests, the production build, and the showroom build.
 - `pnpm start` requires a completed production build.
 - `pnpm preview:showroom` requires a completed showroom build and serves it with SPA fallback.
 - `pnpm release:stage` creates the portable production tree under `.release/runtime/`.
 
-There is currently no unit-test, integration-test, lint, or CI command. Report the checks actually run; do not say tests, lint, CI, or a security audit passed.
+`pnpm test` runs the regression suite with temporary databases and mocked external services. It must not use existing runtime data or credentials. There is no lint or CI command. Report the checks actually run; automated tests are not a security certification.
 
 `release:stage` does not create ZIPs or checksums. Archive creation, hashing, upload, hosted-download comparison, and tag verification remain explicit release steps. Do not publish, retag, or replace release assets without James's authorization.
 

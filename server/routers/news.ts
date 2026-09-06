@@ -2,7 +2,8 @@ import { z } from "zod";
 import { adminProcedure, publicProcedure, router } from "../_core/trpc.js";
 import { getDb } from "../db.js";
 import { newsArticles, documents } from "../../drizzle/schema.js";
-import { desc, eq, and, sql } from "drizzle-orm";
+import { desc, eq, and, sql, lte } from "drizzle-orm";
+import { visibilityCutoff } from "../_core/visibility.js";
 import { invokeLLM } from "../_core/llm.js";
 import { CITIES as REGION_CITIES, DOCUMENT_CATEGORIES } from "../../shared/region.js";
 
@@ -229,9 +230,9 @@ export const newsRouter = router({
       category: z.string().optional(),
       edition: z.string().optional(),
     }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       const db = getDb();
-      const conditions = [];
+      const conditions = [lte(newsArticles.createdAt, visibilityCutoff(ctx.user))];
       if (input.city) conditions.push(eq(newsArticles.city, input.city));
       if (input.category) conditions.push(eq(newsArticles.category, input.category));
       if (input.edition) conditions.push(eq(newsArticles.edition, input.edition));
@@ -245,15 +246,15 @@ export const newsRouter = router({
 
   detail: publicProcedure
     .input(z.object({ id: z.number() }))
-    .query(async ({ input }) => {
-      const [row] = await getDb().select().from(newsArticles).where(eq(newsArticles.id, input.id)).limit(1);
+    .query(async ({ ctx, input }) => {
+      const [row] = await getDb().select().from(newsArticles).where(and(eq(newsArticles.id, input.id), lte(newsArticles.createdAt, visibilityCutoff(ctx.user)))).limit(1);
       return row ?? null;
     }),
 
-  editions: publicProcedure.query(async () => {
+  editions: publicProcedure.query(async ({ ctx }) => {
     const db = getDb();
     const all = await db.select({ edition: newsArticles.edition, city: newsArticles.city })
-      .from(newsArticles).orderBy(desc(newsArticles.createdAt));
+      .from(newsArticles).where(lte(newsArticles.createdAt, visibilityCutoff(ctx.user))).orderBy(desc(newsArticles.createdAt));
     const editionMap: Record<string, { edition: string; cities: Set<string>; count: number }> = {};
     for (const row of all) {
       if (!editionMap[row.edition]) editionMap[row.edition] = { edition: row.edition, cities: new Set(), count: 0 };

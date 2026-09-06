@@ -8,7 +8,7 @@ import {
   DEFAULT_MODEL_BY_PROVIDER,
   type SupportedProvider,
 } from "../_core/llm/types.js";
-import { resetProvider, getLLMProvider } from "../_core/llm/factory.js";
+import { resetProvider, getLLMProvider, createLLMProvider } from "../_core/llm/factory.js";
 
 function redact(key: string | undefined): string | null {
   if (!key) return null;
@@ -87,13 +87,9 @@ export const settingsRouter = router({
   testConnection: adminProcedure
     .input(z.object({ provider: providerEnum }).optional())
     .mutation(async ({ input }) => {
-      // If a provider is specified, temporarily switch to it for the test;
-      // otherwise test the currently active one.
-      if (input?.provider) {
-        writeSettings({ activeProvider: input.provider });
-        resetProvider();
-      }
-      const provider = getLLMProvider();
+      const provider = input?.provider
+        ? createLLMProvider(input.provider)
+        : getLLMProvider();
       return await provider.testConnection();
     }),
 });

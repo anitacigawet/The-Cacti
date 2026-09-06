@@ -19,11 +19,12 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
-    host: true,
+    host: "localhost",
     allowedHosts: ["localhost", "127.0.0.1"],
     fs: {
       strict: true,
-      deny: ["**/.*"],
+      allow: ["client", "shared", "node_modules"].map((dir) => path.resolve(import.meta.dirname, dir)),
+      deny: ["**/.*", "**/*.{crt,pem}", "**/data/**", "**/server/**"],
     },
   },
 });

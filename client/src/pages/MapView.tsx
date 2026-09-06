@@ -1,5 +1,6 @@
 import CactiLayout from "@/components/CactiLayout";
-import { trpc } from "@/lib/trpc";
+import { useAllDocuments } from "@/hooks/useAllDocuments";
+import { summarizeDocumentCities } from "@/lib/document-views";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -349,7 +350,7 @@ function MapCanvas({
               Documents: {hoveredCity.docCount}
             </p>
             <p className="text-muted-foreground">
-              Alerts: {hoveredCity.alertCount}
+              High impact: {hoveredCity.alertCount}
             </p>
             <p className="text-muted-foreground capitalize">
               Sentiment: {hoveredCity.sentiment}
@@ -369,63 +370,15 @@ function MapCanvas({
 export default function MapView() {
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const [, setLocation] = useLocation();
-  const stats = trpc.analytics.metrics.useQuery();
-  // Fetch first 100 documents (API max)
-  const page1 = trpc.documents.list.useQuery({ limit: 100, page: 1 });
-  const page2 = trpc.documents.list.useQuery({ limit: 100, page: 2 });
-  const page3 = trpc.documents.list.useQuery({ limit: 100, page: 3 });
-
-  const allItems = useMemo(() => {
-    const items: any[] = [];
-    if (page1.data?.items) items.push(...page1.data.items);
-    if (page2.data?.items) items.push(...page2.data.items);
-    if (page3.data?.items) items.push(...page3.data.items);
-    return items;
-  }, [page1.data, page2.data, page3.data]);
-
-  const isLoading = page1.isLoading;
+  const documents = useAllDocuments();
+  const isLoading = documents.isPending;
 
   const cityData = useMemo(() => {
-    if (allItems.length === 0) return [];
-    const cityMap: Record<
-      string,
-      { docs: number; alerts: number; sentiments: string[] }
-    > = {};
-
-    for (const doc of allItems) {
-      const city = doc.city || "Mohave County";
-      if (!cityMap[city]) {
-        cityMap[city] = { docs: 0, alerts: 0, sentiments: [] };
-      }
-      cityMap[city].docs++;
-      if (doc.impactLevel === "high" || doc.impactLevel === "critical") {
-        cityMap[city].alerts++;
-      }
-      if (doc.sentiment) {
-        cityMap[city].sentiments.push(doc.sentiment);
-      }
-    }
-
-    return Object.entries(cityMap)
-      .filter(([name]) => CITY_COORDS[name])
-      .map(([name, data]) => {
-        const sentimentCounts: Record<string, number> = {};
-        data.sentiments.forEach((s) => {
-          sentimentCounts[s] = (sentimentCounts[s] || 0) + 1;
-        });
-        const topSentiment =
-          Object.entries(sentimentCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ||
-          "neutral";
-        return {
-          name,
-          lat: CITY_COORDS[name].lat,
-          lng: CITY_COORDS[name].lng,
-          docCount: data.docs,
-          alertCount: data.alerts,
-          sentiment: topSentiment,
-        };
-      });
-  }, [allItems]);
+    if (documents.isError) return [];
+    return summarizeDocumentCities(documents.data ?? [])
+      .filter((city) => CITY_COORDS[city.name])
+      .map((city) => ({ ...city, ...CITY_COORDS[city.name] }));
+  }, [documents.data, documents.isError]);
 
   const selectedCityData = cityData.find((c) => c.name === selectedCity);
 
@@ -485,7 +438,12 @@ export default function MapView() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            {isLoading ? (
+            {documents.isError ? (
+              <div className="p-8 text-center space-y-3" role="alert">
+                <p>Could not load the complete map data.</p>
+                <Button variant="outline" onClick={() => documents.refetch()}>Try again</Button>
+              </div>
+            ) : isLoading ? (
               <Skeleton className="h-[550px]" />
             ) : cityData.length === 0 ? (
               <div className="h-[550px] flex items-center justify-center text-muted-foreground">
@@ -555,7 +513,7 @@ export default function MapView() {
                     className="text-[10px] text-muted-foreground uppercase tracking-wider"
                     style={{ fontFamily: "var(--font-mono)" }}
                   >
-                    Alerts
+                    High impact
                   </p>
                   <p className="text-2xl text-cacti-amber" style={{ fontFamily: "var(--font-display)" }}>
                     {selectedCityData.alertCount}
@@ -609,7 +567,7 @@ export default function MapView() {
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-full border border-cacti-amber/60 bg-cacti-amber/20" />
-            <span>Elevated Alerts</span>
+            <span>More than three high-impact documents</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Activity className="h-3 w-3 text-primary cacti-pulse" />

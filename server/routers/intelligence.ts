@@ -5,7 +5,7 @@ import { documents } from "../../drizzle/schema.js";
 import { invokeLLM } from "../_core/llm.js";
 import { intelligenceSystemPrompt } from "../_core/llm/prompts/intelligence-system.js";
 import { normalizeImpact } from "../_core/impact.js";
-import { sql, desc } from "drizzle-orm";
+import { sql, desc, and, gte, isNotNull } from "drizzle-orm";
 
 export const intelligenceRouter = router({
   query: adminProcedure
@@ -62,7 +62,7 @@ ${contextParts.join("\n\n---\n\n")}`;
       .select()
       .from(documents)
       .where(
-        sql`${documents.analysis} IS NOT NULL AND ${documents.publishedAt} >= ${oneDayAgo}`
+        and(isNotNull(documents.analysis), gte(documents.publishedAt, oneDayAgo))
       )
       .orderBy(desc(documents.publishedAt))
       .limit(20);

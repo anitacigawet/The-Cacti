@@ -8,9 +8,9 @@ import viteConfig from "../../vite.config";
 
 export async function setupVite(app: Express, server: Server) {
   const serverOptions = {
+    ...viteConfig.server,
     middlewareMode: true,
     hmr: { server },
-    allowedHosts: true as const,
   };
 
   const vite = await createViteServer({
@@ -20,6 +20,9 @@ export async function setupVite(app: Express, server: Server) {
     appType: "custom",
   });
 
+  // The application has no browser-to-editor workflow. Do not expose a route
+  // that can make the host inspect paths supplied by an HTTP client.
+  app.use("/__open-in-editor", (_req, res) => { res.status(403).type("text/plain").send("Editor launching is disabled."); });
   app.use(vite.middlewares);
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
@@ -45,4 +48,5 @@ export async function setupVite(app: Express, server: Server) {
       next(e);
     }
   });
+  return vite;
 }

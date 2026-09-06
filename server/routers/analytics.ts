@@ -2,19 +2,20 @@ import { z } from "zod";
 import { publicProcedure, router } from "../_core/trpc.js";
 import { getDb } from "../db.js";
 import { documents } from "../../drizzle/schema.js";
-import { normalizeImpact } from "../_core/impact.js";
-import { sql, desc } from "drizzle-orm";
+import { normalizeImpact, documentImpact } from "../_core/impact.js";
+import { sql, desc, and } from "drizzle-orm";
+import { visibleDocuments } from "../_core/visibility.js";
 
 export const analyticsRouter = router({
-  metrics: publicProcedure.query(async () => {
+  metrics: publicProcedure.query(async ({ ctx }) => {
     const db = getDb();
-    const [{ total }] = await db.select({ total: sql<number>`COUNT(*)` }).from(documents);
+    const [{ total }] = await db.select({ total: sql<number>`COUNT(*)` }).from(documents).where(visibleDocuments(ctx.user));
     const [{ analyzed }] = await db
       .select({ analyzed: sql<number>`COUNT(*)` })
       .from(documents)
-      .where(sql`${documents.analysis} IS NOT NULL`);
-    const cities = await db.selectDistinct({ city: documents.city }).from(documents);
-    const sources = await db.selectDistinct({ source: documents.source }).from(documents);
+      .where(and(visibleDocuments(ctx.user), sql`${documents.analysis} IS NOT NULL`));
+    const cities = await db.selectDistinct({ city: documents.city }).from(documents).where(visibleDocuments(ctx.user));
+    const sources = await db.selectDistinct({ source: documents.source }).from(documents).where(visibleDocuments(ctx.user));
 
     return {
       totalDocuments: total,
@@ -25,12 +26,12 @@ export const analyticsRouter = router({
     };
   }),
 
-  sentimentDistribution: publicProcedure.query(async () => {
+  sentimentDistribution: publicProcedure.query(async ({ ctx }) => {
     const db = getDb();
     const docs = await db
       .select({ sentiment: documents.sentiment })
       .from(documents)
-      .where(sql`${documents.analysis} IS NOT NULL`);
+      .where(and(visibleDocuments(ctx.user), sql`${documents.analysis} IS NOT NULL`));
 
     const counts: Record<string, number> = { positive: 0, neutral: 0, negative: 0, mixed: 0 };
     for (const doc of docs) {
@@ -41,54 +42,56 @@ export const analyticsRouter = router({
     return counts;
   }),
 
-  impactDistribution: publicProcedure.query(async () => {
+  impactDistribution: publicProcedure.query(async ({ ctx }) => {
     const db = getDb();
     const docs = await db
-      .select({ impactLevel: documents.impactLevel })
+      .select({ impactLevel: documentImpact() })
       .from(documents)
-      .where(sql`${documents.analysis} IS NOT NULL`);
+      .where(and(visibleDocuments(ctx.user), sql`${documents.analysis} IS NOT NULL`));
 
     const counts: Record<string, number> = { High: 0, Medium: 0, Low: 0 };
     for (const doc of docs) {
-      const impact = doc.impactLevel === 1 ? "High" : doc.impactLevel === 0 ? "Low" : "Medium";
-      if (impact in counts) counts[impact]++;
-      else counts.Medium++;
+      const impact = doc.impactLevel;
+      if (impact && impact in counts) counts[impact]++;
     }
     return counts;
   }),
 
-  sourceBreakdown: publicProcedure.query(async () => {
+  sourceBreakdown: publicProcedure.query(async ({ ctx }) => {
     const db = getDb();
     return await db
       .select({ source: documents.source, count: sql<number>`COUNT(*)` })
       .from(documents)
+      .where(visibleDocuments(ctx.user))
       .groupBy(documents.source)
       .orderBy(desc(sql`COUNT(*)`));
   }),
 
-  cityBreakdown: publicProcedure.query(async () => {
+  cityBreakdown: publicProcedure.query(async ({ ctx }) => {
     const db = getDb();
     return await db
       .select({ city: documents.city, count: sql<number>`COUNT(*)` })
       .from(documents)
+      .where(visibleDocuments(ctx.user))
       .groupBy(documents.city)
       .orderBy(desc(sql`COUNT(*)`));
   }),
 
-  categoryBreakdown: publicProcedure.query(async () => {
+  categoryBreakdown: publicProcedure.query(async ({ ctx }) => {
     const db = getDb();
     return await db
       .select({ category: documents.category, count: sql<number>`COUNT(*)` })
       .from(documents)
+      .where(visibleDocuments(ctx.user))
       .groupBy(documents.category)
       .orderBy(desc(sql`COUNT(*)`));
   }),
 
-  timeline: publicProcedure.query(async () => {
+  timeline: publicProcedure.query(async ({ ctx }) => {
     const db = getDb();
     const docs = await db
       .select({ publishedAt: documents.publishedAt, city: documents.city })
-      .from(documents);
+      .from(documents).where(visibleDocuments(ctx.user));
 
     const byDay: Record<string, Record<string, number>> = {};
     for (const doc of docs) {
@@ -110,12 +113,12 @@ export const analyticsRouter = router({
 
   topTopics: publicProcedure
     .input(z.object({ limit: z.number().min(1).max(50).default(15) }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       const db = getDb();
       const docs = await db
         .select({ topics: documents.topics })
         .from(documents)
-        .where(sql`${documents.topics} IS NOT NULL`);
+        .where(and(visibleDocuments(ctx.user), sql`${documents.topics} IS NOT NULL`));
 
       const topicCounts: Record<string, number> = {};
       for (const doc of docs) {
@@ -134,12 +137,12 @@ export const analyticsRouter = router({
 
   recentIntelligence: publicProcedure
     .input(z.object({ limit: z.number().min(1).max(50).default(10) }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       const db = getDb();
       const docs = await db
         .select()
         .from(documents)
-        .where(sql`${documents.analysis} IS NOT NULL`)
+        .where(and(visibleDocuments(ctx.user), sql`${documents.analysis} IS NOT NULL`))
         .orderBy(desc(documents.scrapedAt))
         .limit(input.limit);
 

@@ -1,36 +1,37 @@
 /**
  * Simple rolling-window rate limiter.
  *
- * Used by the DeepSeek provider when the user enables rate limiting in the
+ * Shared by all providers when the user enables rate limiting in the
  * Settings UI. Tracks the timestamps of recent requests; if the next request
  * would exceed `requestsPerSecond` within the trailing 1000ms window, awaits
  * just long enough that the oldest in-window request rolls off, then proceeds.
  *
- * One module-level instance is fine for this app — it's a single-user local
- * tool with one in-flight LLM stream at most.
+ * Admissions are queued in arrival order so overlapping calls cannot claim
+ * the same capacity when a previous request leaves the window.
  */
 
-class RateLimiter {
+export class RateLimiter {
   private timestamps: number[] = [];
+  private queue: Promise<void> = Promise.resolve();
 
   async acquire(requestsPerSecond: number): Promise<void> {
     if (requestsPerSecond <= 0) return;
-    const now = Date.now();
-    const windowStart = now - 1000;
-    this.timestamps = this.timestamps.filter((t) => t > windowStart);
+    const admission = this.queue.then(() => this.waitForCapacity(requestsPerSecond));
+    this.queue = admission.catch(() => {});
+    await admission;
+  }
 
-    if (this.timestamps.length < requestsPerSecond) {
-      this.timestamps.push(now);
-      return;
+  private async waitForCapacity(requestsPerSecond: number): Promise<void> {
+    while (true) {
+      const now = Date.now();
+      this.timestamps = this.timestamps.filter((t) => t > now - 1000);
+      if (this.timestamps.length < requestsPerSecond) {
+        this.timestamps.push(now);
+        return;
+      }
+      const waitMs = this.timestamps[0] + 1000 - now;
+      await new Promise((resolve) => setTimeout(resolve, waitMs));
     }
-
-    const oldest = this.timestamps[0];
-    const waitMs = oldest + 1000 - now;
-    if (waitMs > 0) await new Promise((r) => setTimeout(r, waitMs));
-
-    const after = Date.now();
-    this.timestamps = this.timestamps.filter((t) => t > after - 1000);
-    this.timestamps.push(after);
   }
 
   reset(): void {

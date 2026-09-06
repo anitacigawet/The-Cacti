@@ -229,6 +229,7 @@ function filterDocuments(input: any = {}) {
   if (input.source) items = items.filter((item) => item.source === input.source);
   if (input.category) items = items.filter((item) => item.category === input.category);
   if (input.sentiment) items = items.filter((item) => item.sentiment === input.sentiment);
+  if (input.impactLevel) items = items.filter((item) => item.impactLevel === input.impactLevel);
   if (input.search) {
     const search = String(input.search).toLowerCase();
     items = items.filter((item) => `${item.title} ${item.content}`.toLowerCase().includes(search));
@@ -364,7 +365,7 @@ async function handle(path: string, input: any): Promise<any> {
 
 export function createDemoLink(): TRPCLink<AppRouter> {
   return () => ({ op }) => observable((observer) => {
-    const timer = window.setTimeout(() => {
+    const timer = globalThis.setTimeout(() => {
       void handle(op.path, op.input)
         .then((data) => {
           observer.next({ result: { data } } as any);
@@ -372,6 +373,6 @@ export function createDemoLink(): TRPCLink<AppRouter> {
         })
         .catch((error) => observer.error(error));
     }, op.type === "mutation" ? 360 : 55);
-    return () => window.clearTimeout(timer);
+    return () => globalThis.clearTimeout(timer);
   });
 }

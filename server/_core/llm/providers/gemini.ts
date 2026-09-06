@@ -181,7 +181,7 @@ export class GeminiProvider implements LLMProvider {
 
   /** Strip JSON Schema fields Gemini's responseSchema doesn't accept. */
   private sanitizeSchema(schema: unknown): Record<string, unknown> {
-    if (!schema || typeof schema !== "object") return {};
+    if (!schema || typeof schema !== "object" || Array.isArray(schema)) return {};
     const allowed = new Set([
       "type",
       "format",
@@ -200,18 +200,26 @@ export class GeminiProvider implements LLMProvider {
       "pattern",
       "propertyOrdering",
     ]);
-    const walk = (value: unknown): unknown => {
-      if (Array.isArray(value)) return value.map(walk);
-      if (value && typeof value === "object") {
-        const out: Record<string, unknown> = {};
-        for (const [k, v] of Object.entries(value)) {
-          if (allowed.has(k)) out[k] = walk(v);
+    const out: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(schema)) {
+      if (!allowed.has(key)) continue;
+      if (key === "properties") {
+        // Property names are application data, not schema keywords.
+        if (value && typeof value === "object" && !Array.isArray(value)) {
+          out.properties = Object.fromEntries(
+            Object.entries(value).map(([name, definition]) => [
+              name,
+              this.sanitizeSchema(definition),
+            ])
+          );
         }
-        return out;
+      } else if (key === "items") {
+        out.items = this.sanitizeSchema(value);
+      } else {
+        out[key] = value;
       }
-      return value;
-    };
-    return walk(schema) as Record<string, unknown>;
+    }
+    return out;
   }
 
   async generate(params: InvokeParams): Promise<InvokeResult> {

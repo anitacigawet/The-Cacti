@@ -252,8 +252,7 @@ export function effectiveTier(user: User | null): EffectiveTier {
  * - Invited: now − 3 hours (data must be at least 3 hours old).
  * - Public (anonymous): now − 24 hours (data must be at least 24 hours old).
  */
-export function freshnessThreshold(tier: EffectiveTier): Date {
-  const now = Date.now();
+export function freshnessThreshold(tier: EffectiveTier, now = Date.now()): Date {
   switch (tier) {
     case "owner":
       return new Date(now);

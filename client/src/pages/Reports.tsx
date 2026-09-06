@@ -1,5 +1,6 @@
 import CactiLayout from "@/components/CactiLayout";
 import { trpc } from "@/lib/trpc";
+import { csvRows } from "@/lib/csv";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -107,13 +108,13 @@ export default function Reports() {
     if (!dailyBrief.data?.items) return;
     const headers = ["Title", "City", "Sentiment", "Impact Level", "Summary"];
     const rows = dailyBrief.data.items.map((item) => [
-      `"${item.title.replace(/"/g, '""')}"`,
+      item.title,
       item.city,
       item.sentiment,
       item.impactLevel,
-      `"${(item.summary || "").replace(/"/g, '""')}"`,
+      item.summary || "",
     ]);
-    const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const csv = csvRows([headers, ...rows]);
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

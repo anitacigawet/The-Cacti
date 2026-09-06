@@ -2,7 +2,8 @@ import { z } from "zod";
 import { publicProcedure, router } from "../_core/trpc.js";
 import { getDb } from "../db.js";
 import { documents, documentEntities } from "../../drizzle/schema.js";
-import { eq, sql, desc, like } from "drizzle-orm";
+import { eq, sql, desc, and } from "drizzle-orm";
+import { visibleDocuments } from "../_core/visibility.js";
 
 type EntityNode = {
   id: string;
@@ -21,7 +22,7 @@ type EntityEdge = {
 };
 
 export const entitiesRouter = router({
-  graph: publicProcedure.query(async () => {
+  graph: publicProcedure.query(async ({ ctx }) => {
     const db = getDb();
 
     const rows = await db
@@ -35,7 +36,8 @@ export const entitiesRouter = router({
         analysis: documents.analysis,
       })
       .from(documentEntities)
-      .innerJoin(documents, eq(documentEntities.documentId, documents.id));
+      .innerJoin(documents, eq(documentEntities.documentId, documents.id))
+      .where(visibleDocuments(ctx.user));
 
     const entityMap = new Map<string, EntityNode>();
     const docEntities = new Map<number, string[]>();
@@ -98,7 +100,7 @@ export const entitiesRouter = router({
 
   spotlight: publicProcedure
     .input(z.object({ entityId: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       const db = getDb();
       const [entityType, name] = input.entityId.split("::");
       if (!name) return null;
@@ -114,7 +116,7 @@ export const entitiesRouter = router({
         })
         .from(documentEntities)
         .innerJoin(documents, eq(documentEntities.documentId, documents.id))
-        .where(eq(documentEntities.name, name))
+        .where(and(eq(documentEntities.name, name), visibleDocuments(ctx.user)))
         .orderBy(desc(documents.publishedAt))
         .limit(20);
 
@@ -153,7 +155,7 @@ export const entitiesRouter = router({
         limit: z.number().min(1).max(30).default(10),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       const db = getDb();
       const typeMap: Record<string, string> = {
         People: "person",
@@ -165,7 +167,8 @@ export const entitiesRouter = router({
       const rows = await db
         .select({ name: documentEntities.name, count: sql<number>`COUNT(*)` })
         .from(documentEntities)
-        .where(eq(documentEntities.type, sqliteType))
+        .innerJoin(documents, eq(documentEntities.documentId, documents.id))
+        .where(and(eq(documentEntities.type, sqliteType), visibleDocuments(ctx.user)))
         .groupBy(documentEntities.name)
         .orderBy(desc(sql`COUNT(*)`))
         .limit(input.limit);

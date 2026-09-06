@@ -4,7 +4,8 @@ import { getDb } from "../db.js";
 import { documents, documentEntities } from "../../drizzle/schema.js";
 import { eq, desc, asc, like, and, sql, lte } from "drizzle-orm";
 import { effectiveTier, freshnessThreshold } from "../_core/auth.js";
-import { normalizeImpact } from "../_core/impact.js";
+import { normalizeImpact, documentImpact } from "../_core/impact.js";
+import { visibleDocuments } from "../_core/visibility.js";
 
 export const documentsRouter = router({
   list: publicProcedure
@@ -16,6 +17,7 @@ export const documentsRouter = router({
         source: z.string().optional(),
         category: z.string().optional(),
         sentiment: z.string().optional(),
+        impactLevel: z.enum(["High", "Medium", "Low"]).optional(),
         search: z.string().optional(),
         sortBy: z.enum(["date", "title", "city"]).default("date"),
         sortOrder: z.enum(["asc", "desc"]).default("desc"),
@@ -32,6 +34,7 @@ export const documentsRouter = router({
       if (input.source) conditions.push(eq(documents.source, input.source));
       if (input.category) conditions.push(eq(documents.category, input.category));
       if (input.sentiment) conditions.push(eq(documents.sentiment, input.sentiment));
+      if (input.impactLevel) conditions.push(eq(documentImpact(), input.impactLevel));
       if (input.search) {
         conditions.push(
           sql`(${documents.title} LIKE ${"%" + input.search + "%"} OR ${documents.content} LIKE ${"%" + input.search + "%"})`
@@ -49,8 +52,8 @@ export const documentsRouter = router({
       const order = input.sortOrder === "asc" ? asc(sortCol) : desc(sortCol);
 
       const items = await (where
-        ? db.select().from(documents).where(where).orderBy(order)
-        : db.select().from(documents).orderBy(order)
+        ? db.select().from(documents).where(where).orderBy(order, asc(documents.id))
+        : db.select().from(documents).orderBy(order, asc(documents.id))
       )
         .offset((input.page - 1) * input.limit)
         .limit(input.limit);
@@ -150,12 +153,12 @@ export const documentsRouter = router({
       };
     }),
 
-  filterOptions: publicProcedure.query(async () => {
+  filterOptions: publicProcedure.query(async ({ ctx }) => {
     const db = getDb();
     const [citiesRaw, sourcesRaw, categoriesRaw] = await Promise.all([
-      db.selectDistinct({ city: documents.city }).from(documents),
-      db.selectDistinct({ source: documents.source }).from(documents),
-      db.selectDistinct({ category: documents.category }).from(documents),
+      db.selectDistinct({ city: documents.city }).from(documents).where(visibleDocuments(ctx.user)),
+      db.selectDistinct({ source: documents.source }).from(documents).where(visibleDocuments(ctx.user)),
+      db.selectDistinct({ category: documents.category }).from(documents).where(visibleDocuments(ctx.user)),
     ]);
     const cities = citiesRaw.map((r) => r.city).filter(Boolean).sort();
     const sources = sourcesRaw.map((r) => r.source).filter(Boolean).sort();

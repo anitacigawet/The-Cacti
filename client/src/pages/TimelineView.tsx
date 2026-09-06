@@ -1,5 +1,5 @@
 import CactiLayout from "@/components/CactiLayout";
-import { trpc } from "@/lib/trpc";
+import { useAllDocuments } from "@/hooks/useAllDocuments";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SentimentTag, ImpactTag, CityTag, SourceTag } from "@/components/MetaTag";
@@ -41,7 +41,7 @@ const CITY_COLORS: Record<string, string> = {
 interface TimelineDay {
   date: string;
   items: Array<{
-    id: string;
+    id: number;
     title: string;
     city: string;
     source: string;
@@ -58,20 +58,9 @@ export default function TimelineView() {
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
   const [visibleCount, setVisibleCount] = useState(14); // Show 14 days initially
 
-  // Fetch all documents sorted by date
-  const page1 = trpc.documents.list.useQuery({ limit: 100, page: 1, sortBy: "date", sortOrder: "desc" });
-  const page2 = trpc.documents.list.useQuery({ limit: 100, page: 2, sortBy: "date", sortOrder: "desc" });
-  const page3 = trpc.documents.list.useQuery({ limit: 100, page: 3, sortBy: "date", sortOrder: "desc" });
-
-  const allItems = useMemo(() => {
-    const items: any[] = [];
-    if (page1.data?.items) items.push(...page1.data.items);
-    if (page2.data?.items) items.push(...page2.data.items);
-    if (page3.data?.items) items.push(...page3.data.items);
-    return items;
-  }, [page1.data, page2.data, page3.data]);
-
-  const isLoading = page1.isLoading;
+  const documents = useAllDocuments();
+  const allItems = useMemo(() => documents.isError ? [] : documents.data ?? [], [documents.data, documents.isError]);
+  const isLoading = documents.isPending;
 
   // Group documents by day
   const timelineDays = useMemo(() => {
@@ -137,7 +126,7 @@ export default function TimelineView() {
 
         {/* Filters */}
         <div className="flex items-center gap-3">
-          <Select value={cityFilter} onValueChange={setCityFilter}>
+          <Select value={cityFilter} onValueChange={(city) => { setCityFilter(city); setVisibleCount(14); }}>
             <SelectTrigger className="w-[200px] bg-card border-border">
               <Filter className="h-3 w-3 mr-2 text-muted-foreground" />
               <SelectValue placeholder="Filter by city" />
@@ -160,7 +149,12 @@ export default function TimelineView() {
         </div>
 
         {/* Timeline */}
-        {isLoading ? (
+        {documents.isError ? (
+          <div className="p-8 text-center space-y-3" role="alert">
+            <p>Could not load the complete timeline.</p>
+            <Button variant="outline" onClick={() => documents.refetch()}>Try again</Button>
+          </div>
+        ) : isLoading ? (
           <div className="space-y-4">
             {Array.from({ length: 5 }).map((_, i) => (
               <Skeleton key={i} className="h-20 rounded-lg" />

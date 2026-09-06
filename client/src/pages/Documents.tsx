@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/select";
 import { FileText, Search, Filter, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useLocation, useSearch } from "wouter";
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useMemo, useCallback } from "react";
+import { changeDocumentFilters, documentUrl, readDocumentFilters, type DocumentFilters } from "@/lib/document-views";
 import { SentimentTag, ImpactTag, CityTag, SourceTag } from "@/components/MetaTag";
 
 const SENTIMENT_COLORS: Record<string, string> = {
@@ -61,27 +62,13 @@ function HighlightedText({ text, query }: { text: string; query: string }) {
 export default function Documents() {
   const [, setLocation] = useLocation();
   const searchString = useSearch();
-  const params = useMemo(() => new URLSearchParams(searchString), [searchString]);
-
-  // Initialize from URL params for drill-down from Dashboard
-  const [search, setSearch] = useState(params.get("search") || "");
-  const [sentimentFilter, setSentimentFilter] = useState(params.get("sentiment") || "all");
-  const [sourceFilter, setSourceFilter] = useState(params.get("source") || "all");
-  const [cityFilter, setCityFilter] = useState(params.get("city") || "all");
-  const [page, setPage] = useState(1);
+  const filters = useMemo(() => readDocumentFilters(searchString), [searchString]);
+  const { search, sentiment: sentimentFilter, source: sourceFilter, city: cityFilter, impact: impactFilter, page } = filters;
   const pageSize = 20;
-
-  // Sync URL params on mount and when they change
-  useEffect(() => {
-    const s = params.get("search");
-    const sent = params.get("sentiment");
-    const src = params.get("source");
-    const city = params.get("city");
-    if (s) setSearch(s);
-    if (sent) setSentimentFilter(sent);
-    if (src) setSourceFilter(src);
-    if (city) setCityFilter(city);
-  }, [params]);
+  const updateFilters = (changes: Partial<Omit<DocumentFilters, "page">>) => {
+    setLocation(documentUrl(changeDocumentFilters(filters, changes)), { replace: true });
+  };
+  const setPage = (nextPage: number) => setLocation(documentUrl({ ...filters, page: nextPage }));
 
   const docs = trpc.documents.list.useQuery({
     page,
@@ -90,6 +77,7 @@ export default function Documents() {
     sentiment: sentimentFilter !== "all" ? sentimentFilter : undefined,
     source: sourceFilter !== "all" ? sourceFilter : undefined,
     city: cityFilter !== "all" ? cityFilter : undefined,
+    impactLevel: impactFilter !== "all" ? impactFilter : undefined,
   });
 
   const sources = trpc.analytics.sourceBreakdown.useQuery();
@@ -105,14 +93,9 @@ export default function Documents() {
 
   const totalPages = docs.data?.totalPages ?? 1;
 
-  const hasActiveFilters = search || sentimentFilter !== "all" || sourceFilter !== "all" || cityFilter !== "all";
+  const hasActiveFilters = search || sentimentFilter !== "all" || sourceFilter !== "all" || cityFilter !== "all" || impactFilter !== "all";
 
   const clearAllFilters = useCallback(() => {
-    setSearch("");
-    setSentimentFilter("all");
-    setSourceFilter("all");
-    setCityFilter("all");
-    setPage(1);
     setLocation("/documents");
   }, [setLocation]);
 
@@ -134,25 +117,19 @@ export default function Documents() {
 
         {/* Filters */}
         <div className="flex flex-col gap-3" data-tour="documents-search">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
+            <div className="relative flex-1 min-w-[220px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search documents..."
                 value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(1);
-                }}
+                onChange={(e) => updateFilters({ search: e.target.value })}
                 className="pl-10 bg-card border-border"
               />
             </div>
             <Select
               value={sentimentFilter}
-              onValueChange={(v) => {
-                setSentimentFilter(v);
-                setPage(1);
-              }}
+              onValueChange={(sentiment) => updateFilters({ sentiment })}
             >
               <SelectTrigger className="w-[200px] bg-card border-border">
                 <Filter className="h-3 w-3 mr-2 text-muted-foreground" />
@@ -168,10 +145,7 @@ export default function Documents() {
             </Select>
             <Select
               value={sourceFilter}
-              onValueChange={(v) => {
-                setSourceFilter(v);
-                setPage(1);
-              }}
+              onValueChange={(source) => updateFilters({ source })}
             >
               <SelectTrigger className="w-[200px] bg-card border-border">
                 <Filter className="h-3 w-3 mr-2 text-muted-foreground" />
@@ -188,10 +162,7 @@ export default function Documents() {
             </Select>
             <Select
               value={cityFilter}
-              onValueChange={(v) => {
-                setCityFilter(v);
-                setPage(1);
-              }}
+              onValueChange={(city) => updateFilters({ city })}
             >
               <SelectTrigger className="w-[200px] bg-card border-border">
                 <Filter className="h-3 w-3 mr-2 text-muted-foreground" />
@@ -206,6 +177,25 @@ export default function Documents() {
                 ))}
               </SelectContent>
             </Select>
+            <Select
+              value={impactFilter}
+              onValueChange={(impact) => {
+                if (impact === "all" || impact === "High" || impact === "Medium" || impact === "Low") {
+                  updateFilters({ impact });
+                }
+              }}
+            >
+              <SelectTrigger className="w-[200px] bg-card border-border" aria-label="Impact">
+                <Filter className="h-3 w-3 mr-2 text-muted-foreground" />
+                <SelectValue placeholder="Impact" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Impact Levels</SelectItem>
+                <SelectItem value="High">High</SelectItem>
+                <SelectItem value="Medium">Medium</SelectItem>
+                <SelectItem value="Low">Low</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Active filter badges */}
@@ -217,25 +207,31 @@ export default function Documents() {
               {search && (
                 <Badge variant="outline" className="text-xs gap-1 px-2 py-0.5 border-primary/30 text-primary">
                   Search: {search}
-                  <X className="h-3 w-3 cursor-pointer hover:text-foreground" onClick={() => { setSearch(""); setPage(1); }} />
+                  <X className="h-3 w-3 cursor-pointer hover:text-foreground" onClick={() => updateFilters({ search: "" })} />
                 </Badge>
               )}
               {sentimentFilter !== "all" && (
                 <Badge variant="outline" className="text-xs gap-1 px-2 py-0.5" style={{ borderColor: SENTIMENT_COLORS[sentimentFilter], color: SENTIMENT_COLORS[sentimentFilter] }}>
                   {sentimentFilter}
-                  <X className="h-3 w-3 cursor-pointer hover:text-foreground" onClick={() => { setSentimentFilter("all"); setPage(1); }} />
+                  <X className="h-3 w-3 cursor-pointer hover:text-foreground" onClick={() => updateFilters({ sentiment: "all" })} />
                 </Badge>
               )}
               {sourceFilter !== "all" && (
                 <Badge variant="outline" className="text-xs gap-1 px-2 py-0.5 border-cacti-cyan/50 text-cacti-cyan">
                   {sourceFilter}
-                  <X className="h-3 w-3 cursor-pointer hover:text-foreground" onClick={() => { setSourceFilter("all"); setPage(1); }} />
+                  <X className="h-3 w-3 cursor-pointer hover:text-foreground" onClick={() => updateFilters({ source: "all" })} />
                 </Badge>
               )}
               {cityFilter !== "all" && (
                 <Badge variant="outline" className="text-xs gap-1 px-2 py-0.5 border-cacti-green/50 text-cacti-green">
                   {cityFilter}
-                  <X className="h-3 w-3 cursor-pointer hover:text-foreground" onClick={() => { setCityFilter("all"); setPage(1); }} />
+                  <X className="h-3 w-3 cursor-pointer hover:text-foreground" onClick={() => updateFilters({ city: "all" })} />
+                </Badge>
+              )}
+              {impactFilter !== "all" && (
+                <Badge variant="outline" className="text-xs gap-1 px-2 py-0.5">
+                  {impactFilter} impact
+                  <X className="h-3 w-3 cursor-pointer hover:text-foreground" onClick={() => updateFilters({ impact: "all" })} />
                 </Badge>
               )}
               <button

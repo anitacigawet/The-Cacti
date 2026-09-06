@@ -2,7 +2,8 @@ import { z } from "zod";
 import { adminProcedure, publicProcedure, router } from "../_core/trpc.js";
 import { getDb } from "../db.js";
 import { generatedReports, documents } from "../../drizzle/schema.js";
-import { desc, eq, sql } from "drizzle-orm";
+import { desc, eq, sql, and, lte } from "drizzle-orm";
+import { visibilityCutoff } from "../_core/visibility.js";
 import { invokeLLM } from "../_core/llm.js";
 
 const REGION_TIMEZONE = "America/Phoenix";
@@ -17,18 +18,18 @@ export const reportsRouter = router({
       limit: z.number().min(1).max(50).default(20),
       type: z.enum(["daily", "weekly", "custom", "all"]).default("all"),
     }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       const db = getDb();
-      return await (input.type !== "all"
-        ? db.select().from(generatedReports).where(eq(generatedReports.type, input.type))
-        : db.select().from(generatedReports)
-      ).orderBy(desc(generatedReports.createdAt)).limit(input.limit);
+      return await db.select().from(generatedReports).where(and(
+        lte(generatedReports.createdAt, visibilityCutoff(ctx.user)),
+        input.type === "all" ? undefined : eq(generatedReports.type, input.type)
+      )).orderBy(desc(generatedReports.createdAt)).limit(input.limit);
     }),
 
   detail: publicProcedure
     .input(z.object({ id: z.number() }))
-    .query(async ({ input }) => {
-      const [row] = await getDb().select().from(generatedReports).where(eq(generatedReports.id, input.id)).limit(1);
+    .query(async ({ ctx, input }) => {
+      const [row] = await getDb().select().from(generatedReports).where(and(eq(generatedReports.id, input.id), lte(generatedReports.createdAt, visibilityCutoff(ctx.user)))).limit(1);
       return row ?? null;
     }),
 

@@ -20,7 +20,8 @@ function resolveActiveProvider(): SupportedProvider {
   return DEFAULT_PROVIDER;
 }
 
-function instantiate(name: SupportedProvider): LLMProvider {
+/** Create an independent provider without changing the active provider or cache. */
+export function createLLMProvider(name: SupportedProvider): LLMProvider {
   switch (name) {
     case "gemini":
       return new GeminiProvider();
@@ -34,7 +35,7 @@ function instantiate(name: SupportedProvider): LLMProvider {
 export function getLLMProvider(): LLMProvider {
   const active = resolveActiveProvider();
   if (!providerInstance || providerKey !== active) {
-    providerInstance = instantiate(active);
+    providerInstance = createLLMProvider(active);
     providerKey = active;
     console.log(`[LLM] Provider initialized: ${active}`);
   }

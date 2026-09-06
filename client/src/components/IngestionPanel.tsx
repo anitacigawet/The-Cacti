@@ -64,7 +64,13 @@ export default function IngestionPanel({ showHeader = true }: { showHeader?: boo
   const sendDigest = trpc.ingestion.sendDigest.useMutation({
     onSuccess: (data) => {
       stats.refetch();
-      toast.success("Digest sent", { description: `${data.articleCount} articles across ${data.cities} cities` });
+      if (data.sent) {
+        toast.success("Digest sent", { description: `${data.articleCount} articles across ${data.cities} cities` });
+      } else if (import.meta.env.VITE_SHOWROOM_MODE === "1") {
+        toast.info("Showroom preview", { description: "Email delivery is disconnected. No digest was sent." });
+      } else {
+        toast.error("Digest not sent", { description: "Check the email configuration and try again." });
+      }
     },
     onError: (err) => toast.error("Digest failed", { description: err.message }),
   });

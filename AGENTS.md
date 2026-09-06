@@ -87,7 +87,7 @@ git diff HEAD --check
 git status --short
 ```
 
-There is no automated unit-test, integration-test, lint, or CI command. Report exactly what ran. Documentation-only changes require link/content review and `git diff HEAD --check`; they do not require rebuilding unchanged code.
+`pnpm test` runs isolated regression tests with synthetic data and mocked external services; `pnpm verify` includes them. Never point tests at an existing installation's data. There is no lint or CI command. Report exactly what ran. Documentation-only changes require link/content review and `git diff HEAD --check`; they do not require rebuilding unchanged code.
 
 ## Remote actions
 

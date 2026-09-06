@@ -32,15 +32,17 @@ export function registerAuthRoutes(app: Application): void {
   app.get("/api/auth/google/callback", async (req: Request, res: Response) => {
     try {
       const expectedState = readOauthStateCookie(req);
-      const { code, state, error } = req.query as Record<string, string | undefined>;
+      const { code, state, error } = req.query;
       clearOauthStateCookie(res);
 
       if (error) {
-        res.status(400).send(`Google OAuth error: ${error}`);
+        res.status(400).type("text/plain").send(
+          typeof error === "string" ? `Google OAuth error: ${error}` : "Invalid Google OAuth error."
+        );
         return;
       }
-      if (!code || !state || state !== expectedState) {
-        res.status(400).send("Invalid OAuth state — please try signing in again.");
+      if (typeof code !== "string" || !code || typeof state !== "string" || !state || state !== expectedState) {
+        res.status(400).type("text/plain").send("Invalid OAuth state — please try signing in again.");
         return;
       }
 
@@ -48,7 +50,7 @@ export function registerAuthRoutes(app: Application): void {
       const profile = await fetchGoogleUserInfo(tokenResponse.access_token);
 
       if (!profile.email) {
-        res.status(400).send("Google account did not return an email address.");
+        res.status(400).type("text/plain").send("Google account did not return an email address.");
         return;
       }
 
@@ -58,7 +60,7 @@ export function registerAuthRoutes(app: Application): void {
       res.redirect("/");
     } catch (err) {
       console.error("[auth] OAuth callback failed:", err);
-      res.status(500).send("Sign-in failed. Please try again.");
+      res.status(500).type("text/plain").send("Sign-in failed. Please try again.");
     }
   });
 
